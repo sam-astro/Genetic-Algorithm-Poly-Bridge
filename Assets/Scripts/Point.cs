@@ -7,6 +7,7 @@ using UnityEngine;
 public class Point : MonoBehaviour
 {
     public bool runtime = true;
+    public Rigidbody2D rb;
     public List<Bar> connectBars;
     public Vector2 pointID;
 
@@ -14,6 +15,7 @@ public class Point : MonoBehaviour
     {
         if(runtime == false)
         {
+            rb.bodyType = RigidbodyType2D.Static;
             pointID = transform.position;
             if(GameManager.allPoints.ContainsKey(pointID) == false)
             {
@@ -31,6 +33,7 @@ public class Point : MonoBehaviour
             {
                 transform.hasChanged = false;
                 transform.position = Vector3Int.RoundToInt(transform.position);
+                pointID = transform.position;
             }
         }
     }

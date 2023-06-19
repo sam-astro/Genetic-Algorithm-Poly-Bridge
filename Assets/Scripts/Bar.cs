@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 public class Bar : MonoBehaviour
@@ -7,6 +8,16 @@ public class Bar : MonoBehaviour
     public float maxLength = 1;
     public Vector2 startPosition;
     public SpriteRenderer barSpriteRenderer;
+    public BoxCollider2D boxCollider;
+    public HingeJoint2D startJoint;
+    public HingeJoint2D endJoint;
+
+    private Transform model;
+
+    private void Awake()
+    {
+        model = transform.GetChild(0);
+    }
 
     public void UpdateCreatingBar(Vector2 toPosition)
     {
@@ -18,5 +29,10 @@ public class Bar : MonoBehaviour
 
         float length = dir.magnitude;
         barSpriteRenderer.size = new Vector2(length, barSpriteRenderer.size.y);
+
+        if (boxCollider != null)
+            boxCollider.size = barSpriteRenderer.size;
+
+        model.localScale = new Vector3(length, 1, 1);
     }
 }

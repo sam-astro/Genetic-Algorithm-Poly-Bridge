@@ -6,8 +6,11 @@ using UnityEngine.EventSystems;
 
 public class BarCreator : MonoBehaviour, IPointerDownHandler
 {
+    public GameObject roadBar;
+    public GameObject woodBar;
     bool barCreationStarted = false;
     public Bar currentBar;
+    [HideInInspector]
     public GameObject barToInstantiate;
     public Transform barParent;
     public Point currentStartPoint;
@@ -68,6 +71,12 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
 
         currentStartPoint.connectBars.Add(currentBar);
         currentEndPoint.connectBars.Add(currentBar);
+
+        currentBar.startJoint.connectedBody = currentStartPoint.rb;
+        currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
+        currentBar.endJoint.connectedBody = currentEndPoint.rb;
+        currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
+
         StartBarCreation(currentEndPoint.transform.position);
     }
 
@@ -87,7 +96,7 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
             Vector2 clampPos = currentBar.startPosition + Vector2.ClampMagnitude(dir, currentBar.maxLength);
 
             currentEndPoint.transform.position = (Vector2)Vector2Int.FloorToInt(clampPos);
-            currentEndPoint.pointID = currentEndPoint.transform.position;
+            currentEndPoint.pointID = Vector2Int.RoundToInt(currentEndPoint.transform.position);
             currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
         }
     }
