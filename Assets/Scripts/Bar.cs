@@ -12,11 +12,21 @@ public class Bar : MonoBehaviour
     public HingeJoint2D startJoint;
     public HingeJoint2D endJoint;
 
+    public float startJointCurrentload = 0;
+    public float endJointCurrentload = 0;
+
+    public Color stressColor;
+    private Color startColor;
+
+    private SpriteRenderer sr;
+
     private Transform model;
 
     private void Awake()
     {
         model = transform.GetChild(0);
+        sr = GetComponent<SpriteRenderer>();
+        startColor = sr.color;
     }
 
     public void UpdateCreatingBar(Vector2 toPosition)
@@ -34,5 +44,23 @@ public class Bar : MonoBehaviour
             boxCollider.size = barSpriteRenderer.size;
 
         model.localScale = new Vector3(length, 1, 1);
+    }
+
+    public void UpdateMaterial()
+    {
+        if(startJoint != null)
+        startJointCurrentload = startJoint.reactionForce.magnitude / startJoint.breakForce;
+        if(endJoint != null)
+        endJointCurrentload = endJoint.reactionForce.magnitude / endJoint.breakForce;
+
+        float maxLoad = Mathf.Max(startJointCurrentload, endJointCurrentload);
+
+        sr.color = Color.Lerp(startColor, stressColor, maxLoad);
+    }
+
+    private void Update()
+    {
+        if (Time.timeScale == 1)
+            UpdateMaterial();
     }
 }

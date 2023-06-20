@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8917767484418577640}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: 3D Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 6042504480047688721}
   - component: {fileID: 4603999102400226500}
   - component: {fileID: 7914175446261901164}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: -8654481717998665257}
   - component: {fileID: -3526525250782325927}
   - component: {fileID: -5358386243945108751}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -225,6 +225,9 @@ MonoBehaviour:
   boxCollider: {fileID: -8654481717998665257}
   startJoint: {fileID: -3526525250782325927}
   endJoint: {fileID: -5358386243945108751}
+  startJointCurrentload: 0
+  endJointCurrentload: 0
+  stressColor: {r: 0.4433962, g: 0, b: 0, a: 1}
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4
@@ -283,7 +286,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: Infinity
+  m_BreakForce: 500
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
@@ -307,7 +310,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: Infinity
+  m_BreakForce: 500
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
@@ -331,7 +334,8 @@ GameObject:
   - component: {fileID: 3299500479806111977}
   - component: {fileID: 7495832730534752529}
   - component: {fileID: 2558624322100746130}
-  m_Layer: 0
+  - component: {fileID: 3666030466005341799}
+  m_Layer: 6
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -403,6 +407,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3666030466005341799
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7453329980304610546}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.99999994, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7711457952990573391
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,7 +431,7 @@ GameObject:
   - component: {fileID: 6883873844294769963}
   - component: {fileID: 3481490727371417424}
   - component: {fileID: 8190044441397054109}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
