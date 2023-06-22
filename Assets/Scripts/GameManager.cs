@@ -20,6 +20,28 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
+    [ContextMenu("Generate Bridge")]
+    public void GenerateBridge()
+    {
+        barCreator.barToInstantiate = barCreator.roadBar;
+        barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-2, 0));
+        barCreator.CreateBar(new Vector2(-2, 0), new Vector2(0, 0));
+        barCreator.CreateBar(new Vector2(0, 0), new Vector2(2, 0));
+        barCreator.CreateBar(new Vector2(2, 0), new Vector2(4, 0));
+        barCreator.barToInstantiate = barCreator.woodBar;
+        barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-3, 1));
+        barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-2, 0));
+        barCreator.CreateBar(new Vector2(-2, 0), new Vector2(-1, 1));
+        barCreator.CreateBar(new Vector2(-1, 1), new Vector2(0, 0));
+        barCreator.CreateBar(new Vector2(0, 0), new Vector2(1, 1));
+        barCreator.CreateBar(new Vector2(1, 1), new Vector2(2, 0));
+        barCreator.CreateBar(new Vector2(2, 0), new Vector2(3, 1));
+        barCreator.CreateBar(new Vector2(3, 1), new Vector2(4, 0));
+        barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-1, 1));
+        barCreator.CreateBar(new Vector2(-1, 1), new Vector2(1, 1));
+        barCreator.CreateBar(new Vector2(1, 1), new Vector2(3, 1));
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1))

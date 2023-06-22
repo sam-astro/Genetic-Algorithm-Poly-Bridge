@@ -18,6 +18,13 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
     public Transform pointParent;
     public Point currentEndPoint;
 
+    public void CreateBar(Vector2 start, Vector2 end)
+    {
+        StartBarCreation(Vector2Int.RoundToInt(start));
+        currentBar.UpdateCreatingBar(end);
+        FinishBarCreation(end);
+    }
+
     public void OnPointerDown(PointerEventData eventData)
     {
         if (barCreationStarted == false)
@@ -80,6 +87,29 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
         StartBarCreation(currentEndPoint.transform.position);
     }
 
+    void FinishBarCreation(Vector2 pos)
+    {
+        currentEndPoint.gameObject.transform.position = pos;
+        if (GameManager.allPoints.ContainsKey(currentEndPoint.transform.position))
+        {
+            Destroy(currentEndPoint.gameObject);
+            currentEndPoint = GameManager.allPoints[currentEndPoint.transform.position];
+        }
+        else
+        {
+            GameManager.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
+        }
+
+        currentStartPoint.connectBars.Add(currentBar);
+        currentEndPoint.connectBars.Add(currentBar);
+
+        currentBar.startJoint.connectedBody = currentStartPoint.rb;
+        currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
+        currentBar.endJoint.connectedBody = currentEndPoint.rb;
+        currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
+
+     }
+
     void DeleteCurrentBar()
     {
         Destroy(currentBar.gameObject);
@@ -87,17 +117,17 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
         if (currentEndPoint.connectBars.Count == 0 && currentEndPoint.runtime == true) Destroy(currentEndPoint.gameObject);
     }
 
-    private void Update()
-    {
-        if (barCreationStarted)
-        {
-            Vector2 endPosition = (Vector2)Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-            Vector2 dir = endPosition - currentBar.startPosition;
-            Vector2 clampPos = currentBar.startPosition + Vector2.ClampMagnitude(dir, currentBar.maxLength);
+    //private void Update()
+    //{
+    //    if (barCreationStarted)
+    //    {
+    //        Vector2 endPosition = (Vector2)Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+    //        Vector2 dir = endPosition - currentBar.startPosition;
+    //        Vector2 clampPos = currentBar.startPosition + Vector2.ClampMagnitude(dir, currentBar.maxLength);
 
-            currentEndPoint.transform.position = (Vector2)Vector2Int.FloorToInt(clampPos);
-            currentEndPoint.pointID = Vector2Int.RoundToInt(currentEndPoint.transform.position);
-            currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
-        }
-    }
+    //        currentEndPoint.transform.position = (Vector2)Vector2Int.FloorToInt(clampPos);
+    //        currentEndPoint.pointID = Vector2Int.RoundToInt(currentEndPoint.transform.position);
+    //        currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
+    //    }
+    //}
 }
