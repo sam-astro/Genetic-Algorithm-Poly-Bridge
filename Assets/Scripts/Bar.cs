@@ -6,7 +6,7 @@ using UnityEngine;
 public class Bar : MonoBehaviour
 {
     public float maxLength = 1;
-    public Vector2 startPosition;
+    public Vector3 startPosition;
     public SpriteRenderer barSpriteRenderer;
     public BoxCollider2D boxCollider;
     public HingeJoint2D startJoint;
@@ -22,6 +22,8 @@ public class Bar : MonoBehaviour
 
     private Transform model;
 
+    public bool isBroken = false;
+
     private void Awake()
     {
         model = transform.GetChild(0);
@@ -29,7 +31,7 @@ public class Bar : MonoBehaviour
         startColor = sr.color;
     }
 
-    public void UpdateCreatingBar(Vector2 toPosition)
+    public void UpdateCreatingBar(Vector3 toPosition)
     {
         transform.position = (toPosition + startPosition) / 2.0f;
 
@@ -48,19 +50,27 @@ public class Bar : MonoBehaviour
 
     public void UpdateMaterial()
     {
-        if(startJoint != null)
-        startJointCurrentload = startJoint.reactionForce.magnitude / startJoint.breakForce;
-        if(endJoint != null)
-        endJointCurrentload = endJoint.reactionForce.magnitude / endJoint.breakForce;
+        if (startJoint != null)
+            startJointCurrentload = startJoint.reactionForce.magnitude / startJoint.breakForce;
+        else
+            isBroken = true;
+        if (endJoint != null)
+            endJointCurrentload = endJoint.reactionForce.magnitude / endJoint.breakForce;
+        else
+            isBroken = true;
 
-        float maxLoad = Mathf.Max(startJointCurrentload, endJointCurrentload);
-
-        sr.color = Color.Lerp(startColor, stressColor, maxLoad);
+        if (!isBroken)
+        {
+            float maxLoad = Mathf.Max(startJointCurrentload, endJointCurrentload);
+            sr.color = Color.Lerp(startColor, stressColor, maxLoad);
+        }
+        else
+            sr.color = startColor;
     }
 
     private void Update()
     {
-        if (Time.timeScale == 1)
+        if (Time.timeScale == 1 && !isBroken)
             UpdateMaterial();
     }
 }

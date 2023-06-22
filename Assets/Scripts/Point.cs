@@ -11,30 +11,37 @@ public class Point : MonoBehaviour
     public List<Bar> connectBars;
     public Vector2 pointID;
 
+    public Entity entity;
+
     private void Start()
     {
         if(runtime == false)
         {
             rb.bodyType = RigidbodyType2D.Static;
-            pointID = transform.position;
-            if(GameManager.allPoints.ContainsKey(pointID) == false)
+            pointID = (Vector2)Vector2Int.RoundToInt(transform.localPosition);
+            if(entity.allPoints.ContainsKey(pointID) == false)
             {
-                GameManager.allPoints.Add(pointID, this);
+                entity.allPoints.Add(pointID, this);
             }
             runtime = true;
         }
     }
 
-    private void Update()
+    public void RefreshID()
     {
-        if (runtime == false)
-        {
-            if (transform.hasChanged == true)
-            {
-                transform.hasChanged = false;
-                transform.position = Vector3Int.RoundToInt(transform.position);
-                pointID = transform.position;
-            }
-        }
+        pointID = (Vector2)transform.localPosition;
     }
+
+    //private void Update()
+    //{
+    //    if (runtime == false)
+    //    {
+    //        if (transform.hasChanged == true)
+    //        {
+    //            transform.hasChanged = false;
+    //            transform.position = Vector3Int.RoundToInt(transform.position);
+    //            pointID = transform.position;
+    //        }
+    //    }
+    //}
 }

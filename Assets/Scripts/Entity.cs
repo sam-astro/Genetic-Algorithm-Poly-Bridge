@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class Entity : MonoBehaviour
 {
-    public static Dictionary<Vector2, Point> allPoints = new Dictionary<Vector2, Point>();
+    public Dictionary<Vector2, Point> allPoints = new Dictionary<Vector2, Point>();
+    public int dictSize = 0;
 
     public BarCreator barCreator;
 
@@ -42,11 +43,26 @@ public class GameManager : MonoBehaviour
         barCreator.CreateBar(new Vector2(1, 1), new Vector2(3, 1));
     }
 
+    //private void Update()
+    //{
+    //    if (Input.GetKeyDown(KeyCode.Alpha1))
+    //        barCreator.barToInstantiate = barCreator.roadBar;
+    //    else if (Input.GetKeyDown(KeyCode.Alpha2))
+    //        barCreator.barToInstantiate = barCreator.woodBar;
+    //}
+
+    public List<List<Vector2>> barGenes = new List<List<Vector2>>();
+    [ContextMenu("Elapse Entity")]
+    public void Elapse()
+    {
+        foreach (List<Vector2> points in barGenes)
+        {
+            barCreator.CreateBar(points[0], points[1]);
+        }
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-            barCreator.barToInstantiate = barCreator.roadBar;
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-            barCreator.barToInstantiate = barCreator.woodBar;
+        dictSize = allPoints.Count;
     }
 }

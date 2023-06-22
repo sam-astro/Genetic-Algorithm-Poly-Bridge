@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class BarCreator : MonoBehaviour, IPointerDownHandler
+public class BarCreator : MonoBehaviour
 {
     public GameObject roadBar;
     public GameObject woodBar;
@@ -18,62 +18,67 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
     public Transform pointParent;
     public Point currentEndPoint;
 
-    public void CreateBar(Vector2 start, Vector2 end)
+    public Entity entity;
+
+    public void CreateBar(Vector3 start, Vector3 end)
     {
-        StartBarCreation(Vector2Int.RoundToInt(start));
-        currentBar.UpdateCreatingBar(end);
+        StartBarCreation(Vector3Int.RoundToInt(start));
+        //currentBar.UpdateCreatingBar(end + transform.position);
         FinishBarCreation(end);
     }
 
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (barCreationStarted == false)
-        {
-            barCreationStarted = true;
-            StartBarCreation(Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(eventData.position)));
-        }
-        else
-        {
-            if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                FinishBarCreation();
-            }
-            else if (eventData.button == PointerEventData.InputButton.Right)
-            {
-                barCreationStarted = false;
-                DeleteCurrentBar();
-            }
-        }
-    }
+    //public void OnPointerDown(PointerEventData eventData)
+    //{
+    //    if (barCreationStarted == false)
+    //    {
+    //        barCreationStarted = true;
+    //        StartBarCreation(Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(eventData.position)));
+    //    }
+    //    else
+    //    {
+    //        if (eventData.button == PointerEventData.InputButton.Left)
+    //        {
+    //            FinishBarCreation();
+    //        }
+    //        else if (eventData.button == PointerEventData.InputButton.Right)
+    //        {
+    //            barCreationStarted = false;
+    //            DeleteCurrentBar();
+    //        }
+    //    }
+    //}
 
-    void StartBarCreation(Vector2 startPosition)
+    void StartBarCreation(Vector3 startPosition)
     {
         currentBar = Instantiate(barToInstantiate, barParent).GetComponent<Bar>();
-        currentBar.startPosition = startPosition;
+        currentBar.startPosition = startPosition+transform.position;
 
-        if (GameManager.allPoints.ContainsKey(startPosition))
+        if (entity.allPoints.ContainsKey((Vector2)startPosition))
         {
-            currentStartPoint = GameManager.allPoints[startPosition];
+            currentStartPoint = entity.allPoints[(Vector2)startPosition];
         }
         else
         {
-            currentStartPoint = Instantiate(pointToInstantiate, startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
-            GameManager.allPoints.Add(startPosition, currentStartPoint);
+            currentStartPoint = Instantiate(pointToInstantiate, currentBar.startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
+            entity.allPoints.Add((Vector2)startPosition, currentStartPoint);
+            currentStartPoint.entity = entity;
         }
+        currentStartPoint.pointID = Vector2Int.RoundToInt(currentStartPoint.transform.position);
 
-        currentEndPoint = Instantiate(pointToInstantiate, startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
+        currentEndPoint = Instantiate(pointToInstantiate, currentBar.startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
+        currentEndPoint.entity = entity;
     }
 
     void FinishBarCreation()
     {
-        if (GameManager.allPoints.ContainsKey(currentEndPoint.transform.position))
+        if (entity.allPoints.ContainsKey(currentEndPoint.transform.position))
         {
             Destroy(currentEndPoint.gameObject);
-            currentEndPoint = GameManager.allPoints[currentEndPoint.transform.position];
+            currentEndPoint = entity.allPoints[currentEndPoint.transform.position];
         }
         else
         {
-            GameManager.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
+            entity.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
         }
 
         currentStartPoint.connectBars.Add(currentBar);
@@ -87,17 +92,19 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
         StartBarCreation(currentEndPoint.transform.position);
     }
 
-    void FinishBarCreation(Vector2 pos)
+    void FinishBarCreation(Vector3 pos)
     {
-        currentEndPoint.gameObject.transform.position = pos;
-        if (GameManager.allPoints.ContainsKey(currentEndPoint.transform.position))
+        currentEndPoint.gameObject.transform.position = pos+transform.position;
+        currentEndPoint.pointID = Vector2Int.RoundToInt(currentEndPoint.transform.position);
+        currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
+        if (entity.allPoints.ContainsKey(currentEndPoint.transform.localPosition))
         {
             Destroy(currentEndPoint.gameObject);
-            currentEndPoint = GameManager.allPoints[currentEndPoint.transform.position];
+            currentEndPoint = entity.allPoints[currentEndPoint.transform.localPosition];
         }
         else
         {
-            GameManager.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
+            entity.allPoints.Add(currentEndPoint.transform.localPosition, currentEndPoint);
         }
 
         currentStartPoint.connectBars.Add(currentBar);
@@ -108,7 +115,7 @@ public class BarCreator : MonoBehaviour, IPointerDownHandler
         currentBar.endJoint.connectedBody = currentEndPoint.rb;
         currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
 
-     }
+    }
 
     void DeleteCurrentBar()
     {
