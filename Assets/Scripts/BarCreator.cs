@@ -19,8 +19,13 @@ public class BarCreator : MonoBehaviour
 
     public Entity entity;
 
-    public void CreateBar(Vector3 start, Vector3 end)
+    Vector3 startDecimal;
+    Vector3 endDecimal;
+
+    public void CreateBar(Vector3 start, Vector3 end, Vector3 startDecimal, Vector3 endDecimal)
     {
+        this.startDecimal = startDecimal;
+        this.endDecimal = endDecimal;
         StartBarCreation(start);
         //currentBar.UpdateCreatingBar(end + transform.position);
         FinishBarCreation(end);
@@ -60,6 +65,7 @@ public class BarCreator : MonoBehaviour
         {
             currentStartPoint = Instantiate(pointToInstantiate, currentBar.startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
             entity.allPoints.Add((Vector2)startPosition, currentStartPoint);
+            entity.originalUnroundedPoints.Add((Vector2)startPosition, startDecimal);
             currentStartPoint.entity = entity;
         }
         currentStartPoint.pointID = startPosition;
@@ -78,6 +84,7 @@ public class BarCreator : MonoBehaviour
         else
         {
             entity.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
+            entity.originalUnroundedPoints.Add(currentEndPoint.transform.position, endDecimal);
         }
 
         currentStartPoint.connectedBars.Add(currentBar);
@@ -104,6 +111,7 @@ public class BarCreator : MonoBehaviour
         else
         {
             entity.allPoints.Add(currentEndPoint.transform.localPosition, currentEndPoint);
+            entity.originalUnroundedPoints.Add(currentEndPoint.transform.localPosition, endDecimal);
         }
 
         // If bar already exists, don't create it

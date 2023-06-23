@@ -515,15 +515,15 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
         if (randomNumber <= 2f)
         { //if 2
-          //randomly increase by 0% to 10%
-            double factor = UnityEngine.Random.Range(0, 100) / 1000.0f;
-            weight *= 1f+factor;
+          //randomly increase by 0 to 0.5
+            double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
+            weight += factor;
         }
         else if (randomNumber <= 4f)
         { //if 4
-          //randomly decrease by 0% to 10%
-            double factor = UnityEngine.Random.Range(0, 100) / 1000.0f;
-            weight *= 1f - factor;
+          //randomly decrease by 0 to 0.5
+            double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
+            weight -= factor;
         }
         else if (randomNumber <= 6f)
         { //if 6

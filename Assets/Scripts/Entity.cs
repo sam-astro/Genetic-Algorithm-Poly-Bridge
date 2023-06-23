@@ -6,8 +6,10 @@ using UnityEngine;
 public class Entity : MonoBehaviour
 {
     public Dictionary<Vector2, Point> allPoints = new Dictionary<Vector2, Point>();
+    public Dictionary<Vector2, Vector2> originalUnroundedPoints = new Dictionary<Vector2, Vector2>();
     public Dictionary<Vector4, Bar> allBars = new Dictionary<Vector4, Bar>();
     [ShowOnly] public int dictSize = 0;
+    [ShowOnly] public int dict2Size = 0;
     [ShowOnly] public int barSize = 0;
 
     public NeuralNetwork net;
@@ -17,23 +19,35 @@ public class Entity : MonoBehaviour
     [ShowOnly] public double totalFitness;
     [ShowOnly] public bool networkRunning = false;
 
-    [ShowOnly] public double[] locations;
+    double[] locations;
+    double[] types;
+
+    public List<double> fitnessSources = new List<double>();
 
     int simulationWaitIterations = 0;
 
     int timeElapsed = 0;
     int totalIterations;
 
+    float bestCarDistance = 100000f;
+
     int numPointsConnected = 0;
 
-    public Transform trackerPiece;
+    public Transform cubePiece;
+    public Transform car;
+    public Transform endFlag;
+
+    Rigidbody2D carRb;
 
     [Header("Fitness Config")]
     public bool useCube = false;
+    public bool useCar = false;
+    public bool rewardCarDistance = false;
     public bool rewardSturdiness = false;
     public bool brokenPiecePenalty = false;
     public bool disconnectedPointPenalty = false;
     public bool rewardTimeAlive = false;
+    public bool dontAllowBuildingInCarArea = false;
 
     private void Awake()
     {
@@ -50,24 +64,24 @@ public class Entity : MonoBehaviour
     [ContextMenu("Generate Bridge")]
     public void GenerateBridge()
     {
-        barCreator.barToInstantiate = barCreator.roadBar;
-        barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-2, 0));
-        barCreator.CreateBar(new Vector2(-2, 0), new Vector2(0, 0));
-        barCreator.CreateBar(new Vector2(0, 0), new Vector2(2, 0));
-        barCreator.CreateBar(new Vector2(2, 0), new Vector2(4, 0));
-        barCreator.barToInstantiate = barCreator.woodBar;
-        barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-2, 0)); // Recreate the first road as wood, to test if it creates (it should not)
-        barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-3, 1));
-        barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-2, 0));
-        barCreator.CreateBar(new Vector2(-2, 0), new Vector2(-1, 1));
-        barCreator.CreateBar(new Vector2(-1, 1), new Vector2(0, 0));
-        barCreator.CreateBar(new Vector2(0, 0), new Vector2(1, 1));
-        barCreator.CreateBar(new Vector2(1, 1), new Vector2(2, 0));
-        barCreator.CreateBar(new Vector2(2, 0), new Vector2(3, 1));
-        barCreator.CreateBar(new Vector2(3, 1), new Vector2(4, 0));
-        barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-1, 1));
-        barCreator.CreateBar(new Vector2(-1, 1), new Vector2(1, 1));
-        barCreator.CreateBar(new Vector2(1, 1), new Vector2(3, 1));
+        //barCreator.barToInstantiate = barCreator.roadBar;
+        //barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-2, 0));
+        //barCreator.CreateBar(new Vector2(-2, 0), new Vector2(0, 0));
+        //barCreator.CreateBar(new Vector2(0, 0), new Vector2(2, 0));
+        //barCreator.CreateBar(new Vector2(2, 0), new Vector2(4, 0));
+        //barCreator.barToInstantiate = barCreator.woodBar;
+        //barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-2, 0)); // Recreate the first road as wood, to test if it creates (it should not)
+        //barCreator.CreateBar(new Vector2(-4, 0), new Vector2(-3, 1));
+        //barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-2, 0));
+        //barCreator.CreateBar(new Vector2(-2, 0), new Vector2(-1, 1));
+        //barCreator.CreateBar(new Vector2(-1, 1), new Vector2(0, 0));
+        //barCreator.CreateBar(new Vector2(0, 0), new Vector2(1, 1));
+        //barCreator.CreateBar(new Vector2(1, 1), new Vector2(2, 0));
+        //barCreator.CreateBar(new Vector2(2, 0), new Vector2(3, 1));
+        //barCreator.CreateBar(new Vector2(3, 1), new Vector2(4, 0));
+        //barCreator.CreateBar(new Vector2(-3, 1), new Vector2(-1, 1));
+        //barCreator.CreateBar(new Vector2(-1, 1), new Vector2(1, 1));
+        //barCreator.CreateBar(new Vector2(1, 1), new Vector2(3, 1));
     }
 
     //private void Update()
@@ -84,7 +98,23 @@ public class Entity : MonoBehaviour
     {
         if (networkRunning)
         {
-            //net.pendingFitness += -trackerPiece.position.y/3f;
+
+            dictSize = allPoints.Count;
+            dict2Size = originalUnroundedPoints.Count;
+            barSize = allBars.Count;
+
+            if (useCar)
+                carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f, Time.deltaTime), carRb.velocity.y);
+
+            if(rewardCarDistance)
+            {
+                float dist = Mathf.Clamp(Vector2.Distance(car.transform.position, endFlag.transform.position), 0f, 15f) / 15f;
+                
+                if (dist < bestCarDistance)
+                    bestCarDistance = dist;
+            }    
+
+            //net.pendingFitness += -cubePiece.position.y/3f;
 
             foreach (Bar b in allBars.Values)
             {
@@ -93,7 +123,7 @@ public class Entity : MonoBehaviour
             }
 
             // If failing, or this is the last possible iteration, end.
-            if (/*trackerPiece.position.y <= -1f || */timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false)
+            if (/*car.position.y <= -1f || */timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false)
             {
                 End();
                 return false;
@@ -120,11 +150,25 @@ public class Entity : MonoBehaviour
 
     void End()
     {
-        //if (trackerPiece.position.y <= -3)
-        //    net.pendingFitness += -trackerPiece.position.y /3f;
+        //if (cubePiece.position.y <= -3)
+        //    net.pendingFitness += -cubePiece.position.y /3f;
+
+        if (rewardCarDistance)
+        {
+            //net.pendingFitness += 1f - (Mathf.Clamp(car.transform.position.x, -5f, 5f) + 5f) / 10f;
+            //fitnessSources.Add(1f - (Mathf.Clamp(car.transform.position.x, -5f, 5f) + 5f) / 10f);
+            net.pendingFitness += bestCarDistance;
+            fitnessSources.Add(bestCarDistance);
+
+            if(bestCarDistance<=0.1f)
+                net.pendingFitness -= 1;
+        }
 
         if (rewardTimeAlive)
-            net.pendingFitness -= (float)timeElapsed / (float)totalIterations;
+        {
+            net.pendingFitness += 1f - (float)timeElapsed / (float)totalIterations;
+            fitnessSources.Add(1f - (float)timeElapsed / (float)totalIterations);
+        }
 
         // Compare the beginning and ending positions of all
         // of the points. We want this number to be as low as possible.
@@ -133,11 +177,14 @@ public class Entity : MonoBehaviour
         {
             // Compare distance
             float dist = Vector2.Distance(v, allPoints[v].transform.position);
-            totalDist += Mathf.Sqrt(dist);
+            totalDist += dist;
         }
         totalDist /= (allPoints.Count - 3); // Average
         if (rewardSturdiness)
+        {
             net.pendingFitness += totalDist / 3f;
+            fitnessSources.Add(totalDist / 3f);
+        }
 
 
         // Also give a penalty for any broken bridge pieces / high stresses
@@ -148,7 +195,12 @@ public class Entity : MonoBehaviour
         }
         totalStress /= allBars.Count; // Average
         if (brokenPiecePenalty)
-            net.pendingFitness += totalStress;
+        {
+            net.pendingFitness += totalStress * 2f;
+            fitnessSources.Add(totalStress * 2f);
+        }
+
+        networkRunning = false;
     }
 
     public void Init(NeuralNetwork neti, int generation, int numberOfInputs, int totalIterations, int simulationWaitIterations, bool visible)
@@ -159,6 +211,8 @@ public class Entity : MonoBehaviour
         networkRunning = true;
         this.net.fitness += this.net.pendingFitness;
         this.net.pendingFitness = 0;
+        this.bestCarDistance = 10000f;
+        fitnessSources = new List<double>();
         //this.genome = net.genome;
         this.netID = net.netID;
         this.simulationWaitIterations = simulationWaitIterations;
@@ -170,28 +224,45 @@ public class Entity : MonoBehaviour
 
         // Create bridge pieces
         locations = net.weights[0][0]; // Converting it to vector2, so 0,1 is first location, 2,3 is second, etc.
+        types = net.weights[0][1]; // If type is between -1 and 0 it is road, 0 and 1 is wood
 
         // Roads
         Vector2 lastLocation = new Vector2(-4, 0); // Start point
-        barCreator.barToInstantiate = barCreator.roadBar;
-        for (int i = 0; i < (locations.Length - 2) / 2; i++)
+        bool isNegativeX = false;
+        bool isNegativeY = false;
+        bool useNegativeAsDirection = false;
+        float maxLength = 3f;
+        for (int i = 0; i < locations.Length - 2; i++)
         {
-            Vector2 thisLocation = new Vector2Int((int)(locations[i] * 5d), (int)(locations[i + 1] * 5d)); // Start point
-            if (thisLocation == Vector2.zero) // if location is 0,0 this means the net wants to skip it.
-                continue;
-            barCreator.CreateBar(lastLocation, lastLocation + thisLocation);
-            lastLocation = lastLocation + thisLocation;
-        }
+            //if (i == (locations.Length - 2) / 2) // If halfway, switch type
+            //    barCreator.barToInstantiate = barCreator.woodBar;
+            if (types[i] < 0) // If type is between -1 and 0 it is road
+                barCreator.barToInstantiate = barCreator.roadBar;
+            else if (types[i] > 0) // If type is between 0 and 1 it is wood
+                barCreator.barToInstantiate = barCreator.woodBar;
 
-        // Wood Supports
-        //lastLocation = new Vector2(-4, 0); // Start point
-        barCreator.barToInstantiate = barCreator.woodBar;
-        for (int i = (locations.Length - 2) / 2; i < locations.Length - 2; i++)
-        {
-            Vector2 thisLocation = new Vector2Int((int)(locations[i] * 5d), (int)(locations[i + 1] * 5d)); // Start point
-            if (thisLocation == Vector2.zero) // if location is 0,0 this means the net wants to skip it.
+            float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
+            float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
+            Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
+
+            // Make sure distance is not greater than allowed value
+            if (thisLocation.magnitude > maxLength)
+            {
+                thisLocation /= thisLocation.magnitude; // normalize to a length of 1
+                thisLocation *= maxLength; // scale to the maxlength
+            }
+
+            if (dontAllowBuildingInCarArea)
+                if (lastLocation.x + thisLocation.x < -4f) // Make sure no pieces are placed in the car zone
+                    thisLocation = new Vector2(thisLocation.x+(-4f-(lastLocation.x + thisLocation.x)), thisLocation.y);
+
+            if (Vector2Int.RoundToInt(thisLocation) == Vector2.zero) // if location is 0,0 this means the net wants to skip it.
                 continue;
-            barCreator.CreateBar(lastLocation, lastLocation + thisLocation);
+            if (locations[i] < 0)
+                isNegativeX = !isNegativeX;
+            if (locations[i + 1] < 0)
+                isNegativeY = !isNegativeY;
+            barCreator.CreateBar((Vector2)(Vector2Int.RoundToInt(lastLocation)), (Vector2)(Vector2Int.RoundToInt(lastLocation + thisLocation)), lastLocation, thisLocation);
             lastLocation = lastLocation + thisLocation;
         }
 
@@ -200,10 +271,10 @@ public class Entity : MonoBehaviour
         List<Vector2> disconnectedPoints = new List<Vector2>();
         foreach (Point pt in allPoints.Values)
         {
-            if (pt.connectedBars.Count != 0)
-                numPointsConnected += 1;
-            else
+            if (pt.connectedBars.Count == 0)
                 disconnectedPoints.Add(pt.pointID);
+            else
+                numPointsConnected += 1;
         }
 
         // Find the distance from the disconnected points to their nearest point, and punish less the closer it is.
@@ -211,16 +282,13 @@ public class Entity : MonoBehaviour
         foreach (Vector2 dsPt in disconnectedPoints)
         {
             float bestDist = float.MaxValue;
-            foreach (Vector2 pt in allPoints.Keys)
+            foreach (Vector2 pt in originalUnroundedPoints.Values)
             {
-                if (pt != dsPt)
-                { // Don't compare if it is the same one
-                    float dist = Vector2.Distance(dsPt, pt);
-                    if (dist < bestDist)
-                        bestDist = dist;
-                }
+                float dist = Vector2.Distance(dsPt, pt);
+                if (dist < bestDist)
+                    bestDist = dist * dist;
             }
-            if (bestDist < float.MaxValue)
+            if (bestDist != float.MaxValue)
                 totalDists += bestDist;
         }
 
@@ -228,16 +296,23 @@ public class Entity : MonoBehaviour
         //net.pendingFitness += (allPoints.Count - numPointsConnected) * 10;
         // Add (punish) net for disconnected points depending on how close the nearest one is.
         if (disconnectedPointPenalty)
-            net.pendingFitness += totalDists / (float)(disconnectedPoints.Count);
+        {
+            net.pendingFitness += totalDists / (float)(disconnectedPoints.Count) / 3f;
+            fitnessSources.Add(totalDists / (float)(disconnectedPoints.Count) / 3f);
+        }
 
 
         if (useCube)
-            trackerPiece.gameObject.SetActive(true);
+            cubePiece.gameObject.SetActive(true);
+
+        if (useCar)
+        {
+            car.gameObject.SetActive(true);
+            carRb = car.GetComponent<Rigidbody2D>();
+        }
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        dictSize = allPoints.Count;
-        barSize = allBars.Count;
     }
 }

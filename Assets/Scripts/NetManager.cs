@@ -434,7 +434,7 @@ public class NetManager : MonoBehaviour
 
         for (int i = 0; i < populationSize; i++)
         {
-            GameObject tempEntity = Instantiate(netEntityPrefab, Vector3.right * i * 15, Quaternion.identity);
+            GameObject tempEntity = Instantiate(netEntityPrefab, Vector3.right * i * 25, Quaternion.identity);
             entityList.Add(tempEntity);
             //if (i == 0)
             //{
@@ -466,7 +466,7 @@ public class NetManager : MonoBehaviour
             {
                 for (int z = 0; z < parentA.weights[x][y].Length; z++, secLength--)
                 {
-                    bool isMutation = UnityEngine.Random.Range(0, 10) == 1;
+                    bool isMutation = UnityEngine.Random.Range(0, outNet.weights[x][y].Length/2) == 1;
 
                     if (isMutation)
                         outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
@@ -474,7 +474,7 @@ public class NetManager : MonoBehaviour
                     {
                         if (secLength <= 0)
                         {
-                            secLength = UnityEngine.Random.Range(1, outNet.weights[x][y].Length);
+                            secLength = UnityEngine.Random.Range(1, outNet.weights[x][y].Length+3);
                             copyFromSide = UnityEngine.Random.Range(0, 2) == 1;
                         }
 
@@ -511,7 +511,7 @@ public class NetManager : MonoBehaviour
         // Create new offspring to fill the population
         for (int i = 0; i < populationSize/* - populationSize / 10*/; i++) // 1/10th will be randomized
         {
-            int numOfCandidates = UnityEngine.Random.Range(2, 5);
+            int numOfCandidates = UnityEngine.Random.Range(1, 3);
 
             int bestNet = 0;
             double bestScore = 100000d;
@@ -535,7 +535,7 @@ public class NetManager : MonoBehaviour
             parentA = bestNet;
 
 
-            numOfCandidates = UnityEngine.Random.Range(2, 5);
+            numOfCandidates = UnityEngine.Random.Range(1, 3);
 
             bestNet = 0;
             bestScore = 100000d;
@@ -591,11 +591,11 @@ public class NetManager : MonoBehaviour
             nets[i].pendingFitness = 0;
             //nets[i].ResetGenome();
         }
-        //nets[0] = new NeuralNetwork(persistenceNetwork);
-        //nets[0].droppedNeurons = persistenceNetwork.droppedNeurons;
-        //nets[0].mutatableVariables = persistenceNetwork.mutatableVariables;
-        //nets[0].genome = persistenceNetwork.genome;
-        //nets[0].isBest = true;
+        nets[0] = new NeuralNetwork(persistenceNetwork);
+        nets[0].droppedNeurons = persistenceNetwork.droppedNeurons;
+        nets[0].mutatableVariables = persistenceNetwork.mutatableVariables;
+        nets[0].genome = persistenceNetwork.genome;
+        nets[0].isBest = true;
     }
 
     void Finalizer()

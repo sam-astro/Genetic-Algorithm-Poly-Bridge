@@ -465,7 +465,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.011764706, g: 0.011764706, b: 0.011764706, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -570,9 +570,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   populationSize: 100
-  layers: 1000000001000000
+  layers: 1000000002000000
   remainingIterations: 0
-  maxIterations: 150
+  maxIterations: 300
   simulationWaitIterations: 5
   maxTrialsPerGeneration: 2
   mutVarSize: 0

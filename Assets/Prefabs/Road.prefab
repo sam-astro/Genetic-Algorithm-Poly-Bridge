@@ -221,12 +221,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxLength: 3
   startPosition: {x: 0, y: 0, z: 0}
-  barSpriteRenderer: {fileID: 685862935693072309}
   boxCollider: {fileID: -8654481717998665257}
   startJoint: {fileID: -3526525250782325927}
   endJoint: {fileID: -5358386243945108751}
-  startJointCurrentload: 0
-  endJointCurrentload: 0
+  currentLoad: 0
   stressColor: {r: 0.4433962, g: 0, b: 0, a: 1}
   isBroken: 0
 --- !u!50 &-2817594321734108805
@@ -287,7 +285,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: 500
+  m_BreakForce: 350
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
@@ -335,7 +333,6 @@ GameObject:
   - component: {fileID: 3299500479806111977}
   - component: {fileID: 7495832730534752529}
   - component: {fileID: 2558624322100746130}
-  - component: {fileID: 3666030466005341799}
   m_Layer: 6
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -408,19 +405,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3666030466005341799
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7453329980304610546}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.99999994, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7711457952990573391
 GameObject:
   m_ObjectHideFlags: 0
