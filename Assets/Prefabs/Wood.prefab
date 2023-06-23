@@ -308,6 +308,8 @@ MonoBehaviour:
   currentLoad: 0
   stressColor: {r: 0.8113208, g: 0.15994065, b: 0, a: 1}
   isBroken: 0
+  length: 0
+  costPerUnit: 0.2
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4

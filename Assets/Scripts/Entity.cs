@@ -35,6 +35,7 @@ public class Entity : MonoBehaviour
 
     public Transform cubePiece;
     public Transform car;
+    public Transform ghostCar;
     public Transform endFlag;
 
     Rigidbody2D carRb;
@@ -49,6 +50,7 @@ public class Entity : MonoBehaviour
     public bool disconnectedPointPenalty = false;
     public bool rewardTimeAlive = false;
     public bool dontAllowBuildingInCarArea = false;
+    public bool lowerCostBonus = false;
     [Header("Other Config")]
     public bool useRelativeCoordinates = true;
 
@@ -107,7 +109,10 @@ public class Entity : MonoBehaviour
             barSize = allBars.Count;
 
             if (useCar)
-                carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f, Time.deltaTime), carRb.velocity.y);
+            {
+                carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f*(float)simulationWaitIterations, Time.deltaTime), carRb.velocity.y);
+                ghostCar.position = car.position;
+            }
 
             if (rewardCarDistance)
             {
@@ -131,7 +136,7 @@ public class Entity : MonoBehaviour
             }
 
             // If failing, or this is the last possible iteration, end.
-            if (/*car.position.y <= -1f || */timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false)
+            if (car.position.y <= -3f || timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false)
             {
                 End();
                 return false;
@@ -158,8 +163,8 @@ public class Entity : MonoBehaviour
 
     void End()
     {
-        //if (cubePiece.position.y <= -3)
-        //    net.pendingFitness += -cubePiece.position.y /3f;
+        if (car.position.y <= -3)
+            net.pendingFitness += 0.5f;
 
         if (rewardCarDistance)
         {
@@ -184,14 +189,14 @@ public class Entity : MonoBehaviour
         foreach (Vector2 v in allPoints.Keys)
         {
             // Compare distance
-            float dist = Vector2.Distance(v, allPoints[v].transform.position);
-            totalDist += dist;
+            float dist = Vector2.Distance(v, allPoints[v].transform.localPosition);
+            totalDist += dist*dist;
         }
-        totalDist /= (allPoints.Count - 3); // Average
+        totalDist /= (float)(allPoints.Count - 3); // Average
         if (rewardSturdiness)
         {
-            net.pendingFitness += totalDist / 3f;
-            fitnessSources.Add(totalDist / 3f);
+            net.pendingFitness += totalDist / 10f;
+            fitnessSources.Add(totalDist / 10f);
         }
 
 
@@ -201,7 +206,7 @@ public class Entity : MonoBehaviour
         {
             totalStress += b.currentLoad;
         }
-        totalStress /= allBars.Count; // Average
+        totalStress /= (float)(allBars.Count); // Average
         if (brokenPiecePenalty)
         {
             net.pendingFitness += totalStress * 2f;
@@ -229,6 +234,9 @@ public class Entity : MonoBehaviour
         timeElapsed = 0;
         //bestDistance = 10000;
 
+        if (useRelativeCoordinates)
+            this.net.useRelativeCoordinates = true;
+
 
         // Create bridge pieces
         locations = net.weights[0][0]; // Converting it to vector2, so 0,1 is first location, 2,3 is second, etc.
@@ -239,6 +247,7 @@ public class Entity : MonoBehaviour
         bool isNegativeY = false;
         bool useNegativeAsDirection = false;
         float maxLength = 3f;
+        float outputMultiplier = 1f;
 
         // If creating relative bridge pieces
         if (useRelativeCoordinates)
@@ -252,7 +261,7 @@ public class Entity : MonoBehaviour
 
                 float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
                 float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
-                Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
+                Vector2 thisLocation = new Vector2((xVal * outputMultiplier) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * outputMultiplier) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
 
                 // Make sure distance is not greater than allowed value
                 if (thisLocation.magnitude > maxLength)
@@ -287,27 +296,30 @@ public class Entity : MonoBehaviour
 
                 float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
                 float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
-                Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
-
-                // Make sure distance is not greater than allowed value
-                if ((thisLocation+lastLocation).magnitude > maxLength)
-                {
-                    thisLocation /= (thisLocation + lastLocation).magnitude; // normalize to a length of 1
-                    thisLocation *= maxLength; // scale to the maxlength
-                }
+                Vector2 thisLocation = new Vector2((xVal * outputMultiplier) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * outputMultiplier) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
 
                 if (dontAllowBuildingInCarArea)
                     if (thisLocation.x < -4f) // Make sure no pieces are placed in the car zone
                         thisLocation = new Vector2(-4f, thisLocation.y);
 
-                if (Vector2Int.RoundToInt(thisLocation).magnitude < 1) // if length is 0 this means the net wants to skip it.
+                // Make sure distance is not greater than allowed value
+                if (Vector2.Distance(thisLocation, lastLocation) >= maxLength)
+                {
+                    //Vector2 offset = lastLocation;
+                    thisLocation -= lastLocation;
+                    thisLocation /= Vector2.Distance(thisLocation, lastLocation); // normalize to a length of 1
+                    thisLocation *= maxLength; // scale to the maxlength
+                    thisLocation += lastLocation;
+                }
+
+                if (Vector2.Distance(thisLocation, lastLocation) < 1) // if length is 0 this means the net wants to skip it.
                     continue;
                 if (locations[i] < 0)
                     isNegativeX = !isNegativeX;
                 if (locations[i + 1] < 0)
                     isNegativeY = !isNegativeY;
                 barCreator.CreateBar((Vector2)(Vector2Int.RoundToInt(lastLocation)), (Vector2)(Vector2Int.RoundToInt(thisLocation)), lastLocation, thisLocation);
-                lastLocation =thisLocation;
+                lastLocation = thisLocation;
             }
         }
 
@@ -326,24 +338,41 @@ public class Entity : MonoBehaviour
         float totalDists = 0f;
         foreach (Vector2 dsPt in disconnectedPoints)
         {
-            float bestDist = float.MaxValue;
+            float bestDist = 9999;
             foreach (Vector2 pt in originalUnroundedPoints.Values)
             {
                 float dist = Vector2.Distance(dsPt, pt);
                 if (dist < bestDist)
                     bestDist = dist * dist;
             }
-            if (bestDist != float.MaxValue)
+            if (bestDist != 9999)
                 totalDists += bestDist;
         }
 
-        //// Add (punish) net for disconnected points
-        //net.pendingFitness += (allPoints.Count - numPointsConnected) * 10;
         // Add (punish) net for disconnected points depending on how close the nearest one is.
-        if (disconnectedPointPenalty)
+        if (disconnectedPointPenalty && disconnectedPoints.Count > 0)
         {
-            net.pendingFitness += totalDists / (float)(disconnectedPoints.Count) / 3f;
-            fitnessSources.Add(totalDists / (float)(disconnectedPoints.Count) / 3f);
+            net.pendingFitness += totalDists / 3f;
+            fitnessSources.Add(totalDists / 3f);
+        }
+        else if (disconnectedPointPenalty)
+        {
+            net.pendingFitness += -0.2f;
+            fitnessSources.Add(-0.2f);
+        }
+
+        // Add extra for the cost of the bridge pieces
+        if (lowerCostBonus)
+        {
+            float totalCost = 0f;
+            foreach (Bar b in allBars.Values)
+            {
+                totalCost += b.length * b.costPerUnit;
+            }
+            totalCost /= (float)(allBars.Count); // Average
+
+            net.pendingFitness += totalCost/2f;
+            fitnessSources.Add(totalCost/2f);
         }
 
 
@@ -353,6 +382,7 @@ public class Entity : MonoBehaviour
         if (useCar)
         {
             car.gameObject.SetActive(true);
+            ghostCar.gameObject.SetActive(true);
             carRb = car.GetComponent<Rigidbody2D>();
         }
     }

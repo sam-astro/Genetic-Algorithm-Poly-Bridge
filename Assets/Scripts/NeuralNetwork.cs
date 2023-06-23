@@ -29,6 +29,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public float learningRate = 1f;
     public bool isBest = false;
+    public bool useRelativeCoordinates = false;
 
     const string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public string genome = "";
@@ -511,7 +512,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         double weight = inw;
 
         //mutate weight value 
-        double randomNumber = UnityEngine.Random.Range(0, 8);
+        double randomNumber = UnityEngine.Random.Range(0, 20);
 
         if (randomNumber <= 2f)
         { //if 2
@@ -525,15 +526,15 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
             weight -= factor;
         }
-        else if (randomNumber <= 6f)
+        else if (randomNumber <= 5f)
         { //if 6
           //invert
             weight *= -1f;
         }
-        else if (randomNumber <= 8f)
+        else if (randomNumber <= 7f)
         { //if 8
-          //randomly increase or decrease weight by tiny amount
-            double factor = UnityEngine.Random.Range(-1000, 1000) / 100.0f / 1000f;
+          //randomly increase or decrease weight by 1
+            double factor = UnityEngine.Random.Range(-1000, 1000) / 1000.0f;
             weight += factor;
         }
         //else

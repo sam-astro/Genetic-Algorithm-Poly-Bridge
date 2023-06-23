@@ -23,6 +23,10 @@ public class Bar : MonoBehaviour
 
     [ShowOnly] public bool isBroken = false;
 
+    [ShowOnly] public float length = 0f;
+    public float costPerUnit = 1f;
+
+
     private void Awake()
     {
         model = transform.GetChild(0);
@@ -38,7 +42,7 @@ public class Bar : MonoBehaviour
         float angle = Vector2.SignedAngle(Vector2.right, dir);
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
 
-        float length = dir.magnitude;
+        length = dir.magnitude;
         barSpriteRenderer.size = new Vector2(length, barSpriteRenderer.size.y);
 
         if (boxCollider != null)
