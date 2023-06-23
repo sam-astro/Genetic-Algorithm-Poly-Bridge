@@ -43,11 +43,14 @@ public class Entity : MonoBehaviour
     public bool useCube = false;
     public bool useCar = false;
     public bool rewardCarDistance = false;
+    public bool useBestDistance = false;
     public bool rewardSturdiness = false;
     public bool brokenPiecePenalty = false;
     public bool disconnectedPointPenalty = false;
     public bool rewardTimeAlive = false;
     public bool dontAllowBuildingInCarArea = false;
+    [Header("Other Config")]
+    public bool useRelativeCoordinates = true;
 
     private void Awake()
     {
@@ -106,13 +109,18 @@ public class Entity : MonoBehaviour
             if (useCar)
                 carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f, Time.deltaTime), carRb.velocity.y);
 
-            if(rewardCarDistance)
+            if (rewardCarDistance)
             {
                 float dist = Mathf.Clamp(Vector2.Distance(car.transform.position, endFlag.transform.position), 0f, 15f) / 15f;
-                
-                if (dist < bestCarDistance)
+
+                if (useBestDistance)
+                {
+                    if (dist < bestCarDistance)
+                        bestCarDistance = dist;
+                }
+                else
                     bestCarDistance = dist;
-            }    
+            }
 
             //net.pendingFitness += -cubePiece.position.y/3f;
 
@@ -160,7 +168,7 @@ public class Entity : MonoBehaviour
             net.pendingFitness += bestCarDistance;
             fitnessSources.Add(bestCarDistance);
 
-            if(bestCarDistance<=0.1f)
+            if (bestCarDistance <= 0.1f)
                 net.pendingFitness -= 1;
         }
 
@@ -226,44 +234,81 @@ public class Entity : MonoBehaviour
         locations = net.weights[0][0]; // Converting it to vector2, so 0,1 is first location, 2,3 is second, etc.
         types = net.weights[0][1]; // If type is between -1 and 0 it is road, 0 and 1 is wood
 
-        // Roads
         Vector2 lastLocation = new Vector2(-4, 0); // Start point
         bool isNegativeX = false;
         bool isNegativeY = false;
         bool useNegativeAsDirection = false;
         float maxLength = 3f;
-        for (int i = 0; i < locations.Length - 2; i++)
+
+        // If creating relative bridge pieces
+        if (useRelativeCoordinates)
         {
-            //if (i == (locations.Length - 2) / 2) // If halfway, switch type
-            //    barCreator.barToInstantiate = barCreator.woodBar;
-            if (types[i] < 0) // If type is between -1 and 0 it is road
-                barCreator.barToInstantiate = barCreator.roadBar;
-            else if (types[i] > 0) // If type is between 0 and 1 it is wood
-                barCreator.barToInstantiate = barCreator.woodBar;
-
-            float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
-            float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
-            Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
-
-            // Make sure distance is not greater than allowed value
-            if (thisLocation.magnitude > maxLength)
+            for (int i = 0; i < locations.Length - 2; i++)
             {
-                thisLocation /= thisLocation.magnitude; // normalize to a length of 1
-                thisLocation *= maxLength; // scale to the maxlength
+                if (types[i] < 0) // If type is between -1 and 0 it is road
+                    barCreator.barToInstantiate = barCreator.roadBar;
+                else if (types[i] > 0) // If type is between 0 and 1 it is wood
+                    barCreator.barToInstantiate = barCreator.woodBar;
+
+                float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
+                float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
+                Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
+
+                // Make sure distance is not greater than allowed value
+                if (thisLocation.magnitude > maxLength)
+                {
+                    thisLocation /= thisLocation.magnitude; // normalize to a length of 1
+                    thisLocation *= maxLength; // scale to the maxlength
+                }
+
+                if (dontAllowBuildingInCarArea)
+                    if (lastLocation.x + thisLocation.x < -4f) // Make sure no pieces are placed in the car zone
+                        thisLocation = new Vector2(thisLocation.x + (-4f - (lastLocation.x + thisLocation.x)), thisLocation.y);
+
+                if (Vector2Int.RoundToInt(thisLocation).magnitude < 1) // if length is 0 this means the net wants to skip it.
+                    continue;
+                if (locations[i] < 0)
+                    isNegativeX = !isNegativeX;
+                if (locations[i + 1] < 0)
+                    isNegativeY = !isNegativeY;
+                barCreator.CreateBar((Vector2)(Vector2Int.RoundToInt(lastLocation)), (Vector2)(Vector2Int.RoundToInt(lastLocation + thisLocation)), lastLocation, thisLocation);
+                lastLocation = lastLocation + thisLocation;
             }
+        }
+        // Else, use coordinates literally, as world coords
+        else
+        {
+            for (int i = 0; i < locations.Length - 2; i++)
+            {
+                if (types[i] < 0) // If type is between -1 and 0 it is road
+                    barCreator.barToInstantiate = barCreator.roadBar;
+                else if (types[i] > 0) // If type is between 0 and 1 it is wood
+                    barCreator.barToInstantiate = barCreator.woodBar;
 
-            if (dontAllowBuildingInCarArea)
-                if (lastLocation.x + thisLocation.x < -4f) // Make sure no pieces are placed in the car zone
-                    thisLocation = new Vector2(thisLocation.x+(-4f-(lastLocation.x + thisLocation.x)), thisLocation.y);
+                float xVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i]) : (float)locations[i];
+                float yVal = useNegativeAsDirection ? Mathf.Abs((float)locations[i + 1]) : (float)locations[i + 1];
+                Vector2 thisLocation = new Vector2((xVal * 2f) * (isNegativeX && useNegativeAsDirection ? -1f : 1f), (yVal * 2f) * (isNegativeY && useNegativeAsDirection ? -1f : 1f)); // Start point
 
-            if (Vector2Int.RoundToInt(thisLocation) == Vector2.zero) // if location is 0,0 this means the net wants to skip it.
-                continue;
-            if (locations[i] < 0)
-                isNegativeX = !isNegativeX;
-            if (locations[i + 1] < 0)
-                isNegativeY = !isNegativeY;
-            barCreator.CreateBar((Vector2)(Vector2Int.RoundToInt(lastLocation)), (Vector2)(Vector2Int.RoundToInt(lastLocation + thisLocation)), lastLocation, thisLocation);
-            lastLocation = lastLocation + thisLocation;
+                // Make sure distance is not greater than allowed value
+                if ((thisLocation+lastLocation).magnitude > maxLength)
+                {
+                    thisLocation /= (thisLocation + lastLocation).magnitude; // normalize to a length of 1
+                    thisLocation *= maxLength; // scale to the maxlength
+                }
+
+                if (dontAllowBuildingInCarArea)
+                    if (thisLocation.x < -4f) // Make sure no pieces are placed in the car zone
+                        thisLocation = new Vector2(-4f, thisLocation.y);
+
+                if (Vector2Int.RoundToInt(thisLocation).magnitude < 1) // if length is 0 this means the net wants to skip it.
+                    continue;
+                if (locations[i] < 0)
+                    isNegativeX = !isNegativeX;
+                if (locations[i + 1] < 0)
+                    isNegativeY = !isNegativeY;
+                barCreator.CreateBar((Vector2)(Vector2Int.RoundToInt(lastLocation)), (Vector2)(Vector2Int.RoundToInt(thisLocation)), lastLocation, thisLocation);
+                lastLocation =thisLocation;
+            }
         }
 
 
