@@ -6,29 +6,28 @@ using UnityEngine;
 public class Bar : MonoBehaviour
 {
     public float maxLength = 1;
-    public Vector3 startPosition;
-    public SpriteRenderer barSpriteRenderer;
+    [HideInInspector] public Vector3 startPosition;
+    SpriteRenderer barSpriteRenderer;
     public BoxCollider2D boxCollider;
-    public HingeJoint2D startJoint;
-    public HingeJoint2D endJoint;
+    [HideInInspector] public HingeJoint2D startJoint;
+    [HideInInspector] public HingeJoint2D endJoint;
 
-    public float startJointCurrentload = 0;
-    public float endJointCurrentload = 0;
+    float startJointCurrentload = 0;
+    float endJointCurrentload = 0;
+    [ShowOnly] public float currentLoad;
 
     public Color stressColor;
     private Color startColor;
 
-    private SpriteRenderer sr;
-
     private Transform model;
 
-    public bool isBroken = false;
+    [ShowOnly] public bool isBroken = false;
 
     private void Awake()
     {
         model = transform.GetChild(0);
-        sr = GetComponent<SpriteRenderer>();
-        startColor = sr.color;
+        barSpriteRenderer = GetComponent<SpriteRenderer>();
+        startColor = barSpriteRenderer.color;
     }
 
     public void UpdateCreatingBar(Vector3 toPosition)
@@ -62,10 +61,14 @@ public class Bar : MonoBehaviour
         if (!isBroken)
         {
             float maxLoad = Mathf.Max(startJointCurrentload, endJointCurrentload);
-            sr.color = Color.Lerp(startColor, stressColor, maxLoad);
+            currentLoad = maxLoad;
+            barSpriteRenderer.color = Color.Lerp(startColor, stressColor, maxLoad);
         }
         else
-            sr.color = startColor;
+        {
+            barSpriteRenderer.color = startColor;
+            currentLoad = 1.0f;
+        }
     }
 
     private void Update()

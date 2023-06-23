@@ -9,20 +9,19 @@ public class BarCreator : MonoBehaviour
     public GameObject roadBar;
     public GameObject woodBar;
     bool barCreationStarted = false;
-    public Bar currentBar;
-    [HideInInspector]
-    public GameObject barToInstantiate;
+    [HideInInspector] public Bar currentBar;
+    [HideInInspector] public GameObject barToInstantiate;
     public Transform barParent;
-    public Point currentStartPoint;
+    [HideInInspector] public Point currentStartPoint;
     public GameObject pointToInstantiate;
     public Transform pointParent;
-    public Point currentEndPoint;
+    [HideInInspector] public Point currentEndPoint;
 
     public Entity entity;
 
     public void CreateBar(Vector3 start, Vector3 end)
     {
-        StartBarCreation(Vector3Int.RoundToInt(start));
+        StartBarCreation(start);
         //currentBar.UpdateCreatingBar(end + transform.position);
         FinishBarCreation(end);
     }
@@ -32,7 +31,7 @@ public class BarCreator : MonoBehaviour
     //    if (barCreationStarted == false)
     //    {
     //        barCreationStarted = true;
-    //        StartBarCreation(Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(eventData.position)));
+    //        StartBarCreation((Vector3)(Vector2)Vector2Int.RoundToInt(Camera.main.ScreenToWorldPoint(eventData.position)));
     //    }
     //    else
     //    {
@@ -63,7 +62,7 @@ public class BarCreator : MonoBehaviour
             entity.allPoints.Add((Vector2)startPosition, currentStartPoint);
             currentStartPoint.entity = entity;
         }
-        currentStartPoint.pointID = Vector2Int.RoundToInt(currentStartPoint.transform.position);
+        currentStartPoint.pointID = startPosition;
 
         currentEndPoint = Instantiate(pointToInstantiate, currentBar.startPosition, Quaternion.identity, pointParent).GetComponent<Point>();
         currentEndPoint.entity = entity;
@@ -81,8 +80,8 @@ public class BarCreator : MonoBehaviour
             entity.allPoints.Add(currentEndPoint.transform.position, currentEndPoint);
         }
 
-        currentStartPoint.connectBars.Add(currentBar);
-        currentEndPoint.connectBars.Add(currentBar);
+        currentStartPoint.connectedBars.Add(currentBar);
+        currentEndPoint.connectedBars.Add(currentBar);
 
         currentBar.startJoint.connectedBody = currentStartPoint.rb;
         currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
@@ -95,7 +94,7 @@ public class BarCreator : MonoBehaviour
     void FinishBarCreation(Vector3 pos)
     {
         currentEndPoint.gameObject.transform.position = pos+transform.position;
-        currentEndPoint.pointID = Vector2Int.RoundToInt(currentEndPoint.transform.position);
+        currentEndPoint.pointID = pos;
         currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
         if (entity.allPoints.ContainsKey(currentEndPoint.transform.localPosition))
         {
@@ -107,21 +106,41 @@ public class BarCreator : MonoBehaviour
             entity.allPoints.Add(currentEndPoint.transform.localPosition, currentEndPoint);
         }
 
-        currentStartPoint.connectBars.Add(currentBar);
-        currentEndPoint.connectBars.Add(currentBar);
+        // If bar already exists, don't create it
+        if (entity.allBars.ContainsKey(
+            new Vector4(
+                currentBar.startPosition.x,
+                currentBar.startPosition.y,
+                currentEndPoint.transform.position.x,
+                currentEndPoint.transform.position.y
+            )))
+            DeleteCurrentBar();
+        // Else, make it and add to Dictionary
+        else
+        {
+            currentStartPoint.connectedBars.Add(currentBar);
+            currentEndPoint.connectedBars.Add(currentBar);
 
-        currentBar.startJoint.connectedBody = currentStartPoint.rb;
-        currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
-        currentBar.endJoint.connectedBody = currentEndPoint.rb;
-        currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
+            currentBar.startJoint.connectedBody = currentStartPoint.rb;
+            currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
+            currentBar.endJoint.connectedBody = currentEndPoint.rb;
+            currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
 
+            entity.allBars.Add(new Vector4(
+                currentBar.startPosition.x,
+                currentBar.startPosition.y,
+                currentEndPoint.transform.position.x,
+                currentEndPoint.transform.position.y
+            ), currentBar);
+
+        }
     }
 
     void DeleteCurrentBar()
     {
         Destroy(currentBar.gameObject);
-        if (currentStartPoint.connectBars.Count == 0 && currentStartPoint.runtime == true) Destroy(currentStartPoint.gameObject);
-        if (currentEndPoint.connectBars.Count == 0 && currentEndPoint.runtime == true) Destroy(currentEndPoint.gameObject);
+        if (currentStartPoint.connectedBars.Count == 0 && currentStartPoint.runtime == true) Destroy(currentStartPoint.gameObject);
+        if (currentEndPoint.connectedBars.Count == 0 && currentEndPoint.runtime == true) Destroy(currentEndPoint.gameObject);
     }
 
     //private void Update()

@@ -24,7 +24,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979728570276489519}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxLength: 3
-  startPosition: {x: 0, y: 0}
+  startPosition: {x: 0, y: 0, z: 0}
   barSpriteRenderer: {fileID: 685862935693072309}
   boxCollider: {fileID: -8654481717998665257}
   startJoint: {fileID: -3526525250782325927}
@@ -228,6 +228,7 @@ MonoBehaviour:
   startJointCurrentload: 0
   endJointCurrentload: 0
   stressColor: {r: 0.4433962, g: 0, b: 0, a: 1}
+  isBroken: 0
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4
@@ -447,7 +448,7 @@ Transform:
   m_GameObject: {fileID: 7711457952990573391}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0.50001}
-  m_LocalScale: {x: 1, y: 0.1259, z: 0.8336}
+  m_LocalScale: {x: 1, y: 0.13125075, z: 0.8336}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8917767484418577640}

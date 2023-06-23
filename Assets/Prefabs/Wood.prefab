@@ -301,14 +301,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxLength: 5
-  startPosition: {x: 0, y: 0}
-  barSpriteRenderer: {fileID: 685862935693072309}
+  startPosition: {x: 0, y: 0, z: 0}
   boxCollider: {fileID: 0}
   startJoint: {fileID: -3526525250782325927}
   endJoint: {fileID: -5358386243945108751}
-  startJointCurrentload: 0
-  endJointCurrentload: 0
+  currentLoad: 0
   stressColor: {r: 0.8113208, g: 0.15994065, b: 0, a: 1}
+  isBroken: 0
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4
@@ -321,7 +320,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 0.3
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1

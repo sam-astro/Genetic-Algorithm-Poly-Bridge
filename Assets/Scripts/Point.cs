@@ -3,17 +3,16 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-[ExecuteInEditMode]
 public class Point : MonoBehaviour
 {
-    public bool runtime = true;
+    public bool runtime;
     public Rigidbody2D rb;
-    public List<Bar> connectBars;
+    public List<Bar> connectedBars;
     public Vector2 pointID;
 
     public Entity entity;
 
-    private void Start()
+    private void Awake()
     {
         if(runtime == false)
         {
