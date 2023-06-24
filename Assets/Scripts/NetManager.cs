@@ -453,13 +453,14 @@ public class NetManager : MonoBehaviour
 
                     if (isMutation)
                     {
-                        // There is a mutation which randomizes the value (true), or one
-                        // which copies it from a different location (false)
-                        bool mutationType = UnityEngine.Random.Range(0, 3) == 1;
+                        // There is a mutation which randomizes the value, or one
+                        // which copies it from a different location, or one
+                        // where the number is nullified, turned to 0
+                        int mutationType = UnityEngine.Random.Range(0, 100);
                         // If random mutator, or this is the last digit, or on odd index
-                        if (mutationType == false || z >= parentA.weights[x][y].Length - 1 || z % 2 != 0)
+                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1 || z % 2 != 0)
                             outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
-                        else
+                        else if (mutationType <= 80)
                         {
                             int rnd = UnityEngine.Random.Range(0, outNet.weights[x][y].Length - 2);
                             bool rndEven = rnd % 2 == 0;
@@ -479,6 +480,14 @@ public class NetManager : MonoBehaviour
                                 outNet.weights[x][y][z] = parentB.weights[x][y][rnd];
                                 outNet.weights[x][y][z + 1] = parentB.weights[x][y][rnd + 1];
                             }
+                            z++;
+                            secLength--;
+                        }
+                        else if (mutationType <= 100)
+                        {
+                            // Copy 2 values, since they are coordinate pairs
+                            outNet.weights[x][y][z] = 0.01;
+                            outNet.weights[x][y][z + 1] = 0.01;
                             z++;
                             secLength--;
                         }
@@ -526,7 +535,7 @@ public class NetManager : MonoBehaviour
         // Create new offspring to fill the population
         for (int i = 0; i < populationSize/* - populationSize / 10*/; i++) // 1/10th will be randomized
         {
-            int numOfCandidates = UnityEngine.Random.Range(2, 4);
+            int numOfCandidates = UnityEngine.Random.Range(1, 4);
 
             int bestNet = 0;
             double bestScore = 100000d;
@@ -550,7 +559,7 @@ public class NetManager : MonoBehaviour
             parentA = bestNet;
 
 
-            numOfCandidates = UnityEngine.Random.Range(2, 4);
+            numOfCandidates = UnityEngine.Random.Range(1, 4);
 
             bestNet = 0;
             bestScore = 100000d;

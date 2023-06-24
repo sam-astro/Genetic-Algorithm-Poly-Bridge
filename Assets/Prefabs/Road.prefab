@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d6118d613cab3f46b988f7b210dce32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxLength: 3
+  maxLength: 2
   startPosition: {x: 0, y: 0, z: 0}
   boxCollider: {fileID: -8654481717998665257}
   startJoint: {fileID: -3526525250782325927}
@@ -227,6 +227,8 @@ MonoBehaviour:
   currentLoad: 0
   stressColor: {r: 0.4433962, g: 0, b: 0, a: 1}
   isBroken: 0
+  length: 0
+  costPerUnit: 300
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4

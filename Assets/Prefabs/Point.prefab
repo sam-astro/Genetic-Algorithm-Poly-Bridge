@@ -301,8 +301,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   runtime: 1
   rb: {fileID: 5488884852117744643}
-  connectBars: []
+  connectedBars: []
   pointID: {x: 0, y: 0}
+  entity: {fileID: 0}
 --- !u!50 &5488884852117744643
 Rigidbody2D:
   serializedVersion: 4
@@ -398,7 +399,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: cf2eb9de235cee94092ae1adf72bb539, type: 3}
-  m_Color: {r: 1, g: 0.88914996, b: 0, a: 1}
+  m_Color: {r: 0.882353, g: 0.7058824, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

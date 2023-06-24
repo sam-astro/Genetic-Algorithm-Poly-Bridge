@@ -31,6 +31,15 @@ public class BarCreator : MonoBehaviour
         FinishBarCreation(end);
     }
 
+    public void CreateBar(Vector3 start, Vector3 end)
+    {
+        this.startDecimal = start;
+        this.endDecimal = end;
+        StartBarCreation(start);
+        //currentBar.UpdateCreatingBar(end + transform.position);
+        FinishBarCreation(end);
+    }
+
     //public void OnPointerDown(PointerEventData eventData)
     //{
     //    if (barCreationStarted == false)

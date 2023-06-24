@@ -705,7 +705,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   populationSize: 100
-  layers: 1800000002000000
+  layers: 2000000002000000
   remainingIterations: 0
   maxIterations: 300
   simulationWaitIterations: 5
