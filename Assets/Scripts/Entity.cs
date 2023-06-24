@@ -110,7 +110,7 @@ public class Entity : MonoBehaviour
 
             if (useCar)
             {
-                carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f*(float)simulationWaitIterations, Time.deltaTime), carRb.velocity.y);
+                carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f * (float)simulationWaitIterations, Time.deltaTime), carRb.velocity.y);
                 ghostCar.position = car.position;
             }
 
@@ -136,7 +136,7 @@ public class Entity : MonoBehaviour
             }
 
             // If failing, or this is the last possible iteration, end.
-            if (car.position.y <= -3f || timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false)
+            if (car.position.y <= -2f || timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false || bestCarDistance <= 0.05f)
             {
                 End();
                 return false;
@@ -163,7 +163,7 @@ public class Entity : MonoBehaviour
 
     void End()
     {
-        if (car.position.y <= -3)
+        if (car.position.y <= -2)
             net.pendingFitness += 0.5f;
 
         if (rewardCarDistance)
@@ -173,8 +173,11 @@ public class Entity : MonoBehaviour
             net.pendingFitness += bestCarDistance;
             fitnessSources.Add(bestCarDistance);
 
-            if (bestCarDistance <= 0.1f)
+            if (bestCarDistance <= 0.05f)
+            {
                 net.pendingFitness -= 1;
+                timeElapsed = totalIterations;
+            }
         }
 
         if (rewardTimeAlive)
@@ -190,13 +193,13 @@ public class Entity : MonoBehaviour
         {
             // Compare distance
             float dist = Vector2.Distance(v, allPoints[v].transform.localPosition);
-            totalDist += dist*dist;
+            totalDist += dist * dist;
         }
         totalDist /= (float)(allPoints.Count - 3); // Average
         if (rewardSturdiness)
         {
-            net.pendingFitness += totalDist / 10f;
-            fitnessSources.Add(totalDist / 10f);
+            net.pendingFitness += totalDist / 10f * (1f-(float)timeElapsed / (float)totalIterations);
+            fitnessSources.Add(totalDist / 10f * (1f-(float)timeElapsed / (float)totalIterations));
         }
 
 
@@ -371,8 +374,8 @@ public class Entity : MonoBehaviour
             }
             totalCost /= (float)(allBars.Count); // Average
 
-            net.pendingFitness += totalCost/2f;
-            fitnessSources.Add(totalCost/2f);
+            net.pendingFitness += totalCost / 2f;
+            fitnessSources.Add(totalCost / 2f);
         }
 
 

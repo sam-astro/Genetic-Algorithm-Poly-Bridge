@@ -49,6 +49,7 @@ public class NetManager : MonoBehaviour
     //public Transform spawnPoint;
 
     public TMP_Text generationText;
+    public TMP_Text fitnessText;
     //public TMP_Text droppedNeuronsText;
     //public TMP_Text genomeList;
     //public Slider dropChanceSlider;
@@ -120,6 +121,7 @@ public class NetManager : MonoBehaviour
         //currentTrial = maxTrialsPerGeneration;
 
         generationText.text = currentGeneration.ToString() + " : " + currentTrial.ToString();
+        fitnessText.text = bestEverError.ToString("0.0000");
 
         totalNeurons = persistenceNetwork.CountTotalNeurons();
 
@@ -352,6 +354,7 @@ public class NetManager : MonoBehaviour
                 //laser.ResetPosition();
 
                 generationText.text = currentGeneration.ToString() + " : " + currentTrial.ToString();
+                fitnessText.text = bestEverError.ToString("0.0000");
                 //droppedNeuronsText.text = "Dropped Neurons: " + bestDroppedNeuronsAmnt.ToString() + ", " + Math.Round((float)bestDroppedNeuronsAmnt / (float)totalNeurons * 100f, 1).ToString() + "%";
 
 
@@ -367,6 +370,7 @@ public class NetManager : MonoBehaviour
                 CreateEntityBodies();
 
                 generationText.text = currentGeneration.ToString() + " : " + currentTrial.ToString();
+                fitnessText.text = bestEverError.ToString("0.0000");
             }
         }
         else
@@ -451,7 +455,7 @@ public class NetManager : MonoBehaviour
                     {
                         // There is a mutation which randomizes the value (true), or one
                         // which copies it from a different location (false)
-                        bool mutationType = UnityEngine.Random.Range(0, 5) == 1;
+                        bool mutationType = UnityEngine.Random.Range(0, 3) == 1;
                         // If random mutator, or this is the last digit, or on odd index
                         if (mutationType == false || z >= parentA.weights[x][y].Length - 1 || z % 2 != 0)
                             outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
@@ -522,7 +526,7 @@ public class NetManager : MonoBehaviour
         // Create new offspring to fill the population
         for (int i = 0; i < populationSize/* - populationSize / 10*/; i++) // 1/10th will be randomized
         {
-            int numOfCandidates = UnityEngine.Random.Range(1, 4);
+            int numOfCandidates = UnityEngine.Random.Range(2, 4);
 
             int bestNet = 0;
             double bestScore = 100000d;
@@ -546,7 +550,7 @@ public class NetManager : MonoBehaviour
             parentA = bestNet;
 
 
-            numOfCandidates = UnityEngine.Random.Range(1, 4);
+            numOfCandidates = UnityEngine.Random.Range(2, 4);
 
             bestNet = 0;
             bestScore = 100000d;
