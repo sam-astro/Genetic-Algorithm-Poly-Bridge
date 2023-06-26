@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: -5358386243945108751}
   m_Layer: 6
   m_Name: Road
-  m_TagString: Untagged
+  m_TagString: ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -224,6 +224,8 @@ MonoBehaviour:
   boxCollider: {fileID: -8654481717998665257}
   startJoint: {fileID: -3526525250782325927}
   endJoint: {fileID: -5358386243945108751}
+  startPos: {x: 0, y: 0}
+  endPos: {x: 0, y: 0}
   currentLoad: 0
   stressColor: {r: 0.4433962, g: 0, b: 0, a: 1}
   isBroken: 0
@@ -241,7 +243,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 1.5
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
@@ -287,7 +289,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: 350
+  m_BreakForce: 550
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
@@ -311,7 +313,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: 500
+  m_BreakForce: 550
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}

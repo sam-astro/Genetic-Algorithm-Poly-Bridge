@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+using static UnityEditor.PlayerSettings;
+
 public class BarCreator : MonoBehaviour
 {
     public GameObject roadBar;
@@ -24,11 +26,49 @@ public class BarCreator : MonoBehaviour
 
     public void CreateBar(Vector3 start, Vector3 end, Vector3 startDecimal, Vector3 endDecimal)
     {
+        //// If bar already exists, don't create it
+        //if (entity.allBars.ContainsKey(SortV4(start,end)))
+        //    return;
+
+        //Otherwise, it ok
+
         this.startDecimal = startDecimal;
         this.endDecimal = endDecimal;
         StartBarCreation(start);
         //currentBar.UpdateCreatingBar(end + transform.position);
         FinishBarCreation(end);
+
+        //entity.allBars.Add(SortV4(start, end), currentBar);
+
+        if (entity.allBars.ContainsKey(new Vector4(
+            currentBar.startPos.x,
+            currentBar.startPos.y,
+            currentBar.endPos.x,
+            currentBar.endPos.y)))
+            DeleteCurrentBar();
+        else
+            //entity.allBars.Add(new Vector4(start.x, start.y, end.x, end.y), currentBar);
+            //Add to dictionary when done
+            entity.allBars.Add(
+            new Vector4(
+                currentBar.startPos.x,
+                currentBar.startPos.y,
+                currentBar.endPos.x,
+                currentBar.endPos.y),
+            currentBar
+            );
+    }
+
+    Vector4 SortV4(Vector2 a, Vector2 b)
+    {
+        Vector4 o = Vector4.zero;
+
+        if (a.magnitude < b.magnitude)
+            o = new Vector4(a.x, a.y, b.x, b.y);
+        else
+            o = new Vector4(a.x, a.y, b.x, b.y);
+
+        return o;
     }
 
     public void CreateBar(Vector3 start, Vector3 end)
@@ -64,7 +104,7 @@ public class BarCreator : MonoBehaviour
     void StartBarCreation(Vector3 startPosition)
     {
         currentBar = Instantiate(barToInstantiate, barParent).GetComponent<Bar>();
-        currentBar.startPosition = startPosition+transform.position;
+        currentBar.startPosition = startPosition + transform.position;
 
         if (entity.allPoints.ContainsKey((Vector2)startPosition))
         {
@@ -109,7 +149,7 @@ public class BarCreator : MonoBehaviour
 
     void FinishBarCreation(Vector3 pos)
     {
-        currentEndPoint.gameObject.transform.position = pos+transform.position;
+        currentEndPoint.gameObject.transform.position = pos + transform.position;
         currentEndPoint.pointID = pos;
         currentBar.UpdateCreatingBar(currentEndPoint.transform.position);
         if (entity.allPoints.ContainsKey(currentEndPoint.transform.localPosition))
@@ -123,34 +163,30 @@ public class BarCreator : MonoBehaviour
             entity.originalUnroundedPoints.Add(currentEndPoint.transform.localPosition, endDecimal);
         }
 
-        // If bar already exists, don't create it
-        if (entity.allBars.ContainsKey(
-            new Vector4(
-                currentBar.startPosition.x,
-                currentBar.startPosition.y,
-                currentEndPoint.transform.position.x,
-                currentEndPoint.transform.position.y
-            )))
-            DeleteCurrentBar();
-        // Else, make it and add to Dictionary
-        else
-        {
-            currentStartPoint.connectedBars.Add(currentBar);
-            currentEndPoint.connectedBars.Add(currentBar);
+        //// If bar already exists, don't create it
+        //if (entity.allBars.ContainsKey(
+        //    new Vector4(
+        //        currentBar.startPosition.x,
+        //        currentBar.startPosition.y,
+        //        currentEndPoint.transform.position.x,
+        //        currentEndPoint.transform.position.y
+        //    )))
+        //    DeleteCurrentBar();
 
-            currentBar.startJoint.connectedBody = currentStartPoint.rb;
-            currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
-            currentBar.endJoint.connectedBody = currentEndPoint.rb;
-            currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
+        currentStartPoint.connectedBars.Add(currentBar);
+        currentEndPoint.connectedBars.Add(currentBar);
 
-            entity.allBars.Add(new Vector4(
-                currentBar.startPosition.x,
-                currentBar.startPosition.y,
-                currentEndPoint.transform.position.x,
-                currentEndPoint.transform.position.y
-            ), currentBar);
+        currentBar.startJoint.connectedBody = currentStartPoint.rb;
+        currentBar.startJoint.anchor = currentBar.transform.InverseTransformPoint(currentBar.startPosition);
+        currentBar.endJoint.connectedBody = currentEndPoint.rb;
+        currentBar.endJoint.anchor = currentBar.transform.InverseTransformPoint(currentEndPoint.transform.position);
 
-        }
+        //entity.allBars.Add(new Vector4(
+        //    Mathf.Round(startDecimal.x),
+        //    Mathf.Round(startDecimal.y),
+        //    pos.x,
+        //    pos.y
+        //), currentBar);
     }
 
     void DeleteCurrentBar()

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+//using System.Numerics;
 
 using UnityEngine;
 
@@ -11,6 +12,8 @@ public class Bar : MonoBehaviour
     public BoxCollider2D boxCollider;
     [HideInInspector] public HingeJoint2D startJoint;
     [HideInInspector] public HingeJoint2D endJoint;
+    public Vector2 startPos;
+    public Vector2 endPos;
 
     float startJointCurrentload = 0;
     float endJointCurrentload = 0;
@@ -49,6 +52,21 @@ public class Bar : MonoBehaviour
             boxCollider.size = barSpriteRenderer.size;
 
         model.localScale = new Vector3(length, 1, 1);
+
+        startPos = (Vector2)(Vector2Int.RoundToInt(startPosition));
+        endPos = (Vector2)(Vector2Int.RoundToInt(toPosition));
+        SortV2s();
+    }
+
+    void SortV2s()
+    {
+        // Start should always be less than end
+        if (startPos.magnitude > endPos.magnitude)
+        {
+            Vector2 cpy = startPos;
+            startPos = endPos;
+            endPos = cpy;
+        }
     }
 
     public void UpdateMaterial()

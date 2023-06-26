@@ -50,6 +50,9 @@ public class NetManager : MonoBehaviour
 
     public TMP_Text generationText;
     public TMP_Text fitnessText;
+    public Animator increasedFitnessIcon;
+    public Slider genProgress;
+    public DebugGUI debugGUI;
     //public TMP_Text droppedNeuronsText;
     //public TMP_Text genomeList;
     //public Slider dropChanceSlider;
@@ -108,6 +111,12 @@ public class NetManager : MonoBehaviour
     int bestDroppedNeuronsAmnt = 0;
     int totalNeurons = 0;
 
+    public float maxSegLength;
+    public float outputMultiplier;
+
+    public Vector2[] startValues;
+    public double[] start2Values;
+
     //[ShowOnly] public double[] bestMutVarsBefore;
     //[ShowOnly] public double[] bestMutVars;
     #endregion
@@ -137,14 +146,33 @@ public class NetManager : MonoBehaviour
             using (StreamWriter sw = File.AppendText("./Assets/dat/hist.csv"))
                 sw.WriteLine("generation, Top Error, Gen Error, Dropped %");
 
+        DebugGUI.SetGraphProperties("Best Error Over Time", "Best Error", -0.1f, 3, 1, new Color(0, 1, 0), true, 5, Screen.height / 6);
+        DebugGUI.SetGraphProperties("Gen Error", "Gen Error", -0.1f, 3, 1, new Color(0, 0, 1), false, 5, Screen.height / 6);
+
+        // Add existing data to graph
+        var lines = File.ReadAllLines("./Assets/dat/hist.csv");
+        for (var i = 1; i < lines.Length; i += 1)
+        {
+            DebugGUI.Graph("Best Error Over Time", float.Parse(lines[i].Split(",")[1]));
+            DebugGUI.Graph("Gen Error", float.Parse(lines[i].Split(",")[2]));
+        }
+
 
         //// Only iterate the bridge entities a single time; this is when they
         //// create their bridges, then we just wait for physics.
         //IterateNetEntities();
     }
 
+    bool hiScore;
     public void FixedUpdate()
     {
+        // Play increased fitness icon animation if it was increased
+        if (hiScore)
+        {
+            increasedFitnessIcon.Play("playarrow");
+            hiScore = false;
+        }
+
         //// Initial iteration
         //if(remainingIterations == -10)
         //{
@@ -257,6 +285,8 @@ public class NetManager : MonoBehaviour
                 Time.timeScale = 0;
                 generationText.text = "processing...";
 
+                hiScore = false;
+
                 //dropChance = (int)dropChanceSlider.value;
 
                 // Make sure final pendingFitness is added
@@ -285,6 +315,8 @@ public class NetManager : MonoBehaviour
                     // is still within 3% or lower of the best ever to not have too much of a deviation
                     (optimizeAndShrinkNet && (nets[nets.Count - 1].CountDroppedNeurons() >= bestDroppedNeuronsAmnt) && (bestError <= bestEverError * 1.005f)))
                 {
+                    hiScore = true;
+
                     //if (optimizeAndShrinkNet && (nets[nets.Count - 1].CountDroppedNeurons() < bestDroppedNeuronsAmnt))
                     //    goto skip0;
                     persistenceNetwork.weights = nets[nets.Count - 1].weights;
@@ -362,6 +394,9 @@ public class NetManager : MonoBehaviour
                 // create their bridges, then we just wait for physics.
                 IterateNetEntities();
                 Time.timeScale = 1;
+
+                DebugGUI.Graph("Best Error Over Time", (float)bestEverError);
+                DebugGUI.Graph("Gen Error", (float)lastBest);
             }
             else // Otherwise, create next currentTrial and reset entities
             {
@@ -376,6 +411,9 @@ public class NetManager : MonoBehaviour
         else
         {
             remainingIterations -= 1;
+
+            genProgress.maxValue = maxTrialsPerGeneration * populationSize;
+            genProgress.value = currentTrial * populationSize + (populationSize - populationLeft);
 
             if (remainingIterations % simulationWaitIterations == 0)
                 if (IterateNetEntities() == false)
@@ -421,7 +459,7 @@ public class NetManager : MonoBehaviour
             //{
             //    cameraFollow.target = entityList[i].GetComponent<Entity>().modelPieces[0].transform;
             //}
-            entityList[i].GetComponent<Entity>().Init(nets[i], currentGeneration, layers[0], maxIterations, simulationWaitIterations, onlyShowBest ? (i == 0 ? true : false) : true);
+            entityList[i].GetComponent<Entity>().Init(nets[i], currentGeneration, layers[0], maxIterations, simulationWaitIterations, onlyShowBest ? (i == 0 ? true : false) : true, maxSegLength, outputMultiplier);
         }
     }
 
@@ -449,18 +487,18 @@ public class NetManager : MonoBehaviour
             {
                 for (int z = 0; z < parentA.weights[x][y].Length; z++, secLength--)
                 {
-                    bool isMutation = UnityEngine.Random.Range(0, 20) == 1;
+                    bool isMutation = UnityEngine.Random.Range(0, 40) == 1;
 
                     if (isMutation)
                     {
                         // There is a mutation which randomizes the value, or one
                         // which copies it from a different location, or one
                         // where the number is nullified, turned to 0
-                        int mutationType = UnityEngine.Random.Range(0, 100);
+                        int mutationType = UnityEngine.Random.Range(0, 80);
                         // If random mutator, or this is the last digit, or on odd index
-                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1 || z % 2 != 0)
+                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1)
                             outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
-                        else if (mutationType <= 80)
+                        else if (mutationType <= 80 && y == 0)
                         {
                             int rnd = UnityEngine.Random.Range(0, outNet.weights[x][y].Length - 2);
                             bool rndEven = rnd % 2 == 0;
@@ -471,33 +509,63 @@ public class NetManager : MonoBehaviour
                             if (copyFromSide == false)
                             {
                                 // Copy 2 values, since they are coordinate pairs
+                                double tmpA = outNet.weights[x][y][z];
+                                double tmpB = outNet.weights[x][y][z + 1];
                                 outNet.weights[x][y][z] = parentA.weights[x][y][rnd];
                                 outNet.weights[x][y][z + 1] = parentA.weights[x][y][rnd + 1];
+                                parentA.weights[x][y][rnd] = tmpA;
+                                parentA.weights[x][y][rnd + 1] = tmpB;
                             }
                             else
                             {
                                 // Copy 2 values, since they are coordinate pairs
+                                double tmpA = outNet.weights[x][y][z];
+                                double tmpB = outNet.weights[x][y][z + 1];
                                 outNet.weights[x][y][z] = parentB.weights[x][y][rnd];
                                 outNet.weights[x][y][z + 1] = parentB.weights[x][y][rnd + 1];
+                                parentB.weights[x][y][rnd] = tmpA;
+                                parentB.weights[x][y][rnd + 1] = tmpB;
                             }
                             z++;
                             secLength--;
                         }
-                        else if (mutationType <= 100)
+                        else if (mutationType <= 80 && y == 1)
                         {
-                            // Copy 2 values, since they are coordinate pairs
-                            outNet.weights[x][y][z] = 0.01;
-                            outNet.weights[x][y][z + 1] = 0.01;
+                            int rnd = UnityEngine.Random.Range(0, outNet.weights[x][y].Length);
+
+                            // Copy from the correct parent
+                            if (copyFromSide == false)
+                            {
+                                // Copy 2 values, since they are coordinate pairs
+                                double tmpA = outNet.weights[x][y][z];
+                                outNet.weights[x][y][z] = parentA.weights[x][y][rnd];
+                                parentA.weights[x][y][rnd] = tmpA;
+                            }
+                            else
+                            {
+                                // Copy 2 values, since they are coordinate pairs
+                                double tmpA = outNet.weights[x][y][z];
+                                outNet.weights[x][y][z] = parentB.weights[x][y][rnd];
+                                parentB.weights[x][y][rnd] = tmpA;
+                            }
                             z++;
                             secLength--;
                         }
+                        //else if (mutationType <= 100)
+                        //{
+                        //    // Write 2 values, since they are coordinate pairs
+                        //    outNet.weights[x][y][z] = 0.01;
+                        //    outNet.weights[x][y][z + 1] = 0.01;
+                        //    z++;
+                        //    secLength--;
+                        //}
                     }
                     else
                     {
                         if (secLength <= 0)
                         {
                             secLength = UnityEngine.Random.Range(outNet.weights[x][y].Length / 3, outNet.weights[x][y].Length + 3);
-                            if (secLength % 2 != 0) // Make sure section length is even, to not split coordinate pair
+                            if (secLength % 2 != 0 && y == 0) // Make sure section length is even if first array, to not split coordinate pair
                                 secLength++;
                             copyFromSide = UnityEngine.Random.Range(0, 2) == 1;
                         }
@@ -847,6 +915,18 @@ public class NetManager : MonoBehaviour
                 net.ResetGenome();
                 net.CopyWeights(net.RandomizeWeights());
                 net.droppedNeurons = net.RandomizeDroppedNeurons(dropChance);
+
+                for (int x = 0; x < net.weights.Length; x++)
+                    for (int z = 0; z < net.weights[x][0].Length && z < startValues.Length*2; z++)
+                        if (z % 2 == 0)
+                            net.weights[x][0][z] = startValues[z/2].x/ outputMultiplier;
+                        else
+                            net.weights[x][0][z] = startValues[z/2].y/ outputMultiplier;
+
+                for (int x = 0; x < net.weights.Length; x++)
+                    for (int z = 0; z < net.weights[x][1].Length && z < start2Values.Length; z++)
+                        net.weights[x][1][z] = start2Values[z];
+
                 //net.mutatableVariables = net.RandomizeMutVars();
                 net.mutatableVariables[0] = 0.25f;
 

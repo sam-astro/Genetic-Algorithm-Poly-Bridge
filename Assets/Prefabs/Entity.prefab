@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 66338097}
   - component: {fileID: 66338096}
   - component: {fileID: 66338099}
+  - component: {fileID: 8816200167387119199}
   m_Layer: 0
   m_Name: CarOrSomething
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 66338094}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.92, y: 0.75, z: 0.5}
+  m_LocalPosition: {x: -7.17, y: 0.75, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -113,7 +114,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 2
+  m_Mass: 3
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
@@ -122,6 +123,21 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &8816200167387119199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 66338094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02c8de174adf79c4eb0485baac97a08f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isColliding: 0
+  failed: 0
+  tagName: ground
 --- !u!1 &118898951
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,7 +152,7 @@ GameObject:
   - component: {fileID: 118898953}
   m_Layer: 0
   m_Name: StartGround
-  m_TagString: Untagged
+  m_TagString: ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -149,8 +165,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 118898951}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.51, y: -3.9014, z: 0.5}
-  m_LocalScale: {x: 2.86, y: 8.14268, z: 1}
+  m_LocalPosition: {x: -7.51, y: -6.5654, z: 0.5}
+  m_LocalScale: {x: 2.86, y: 13.470435, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7348806112069926825}
@@ -391,7 +407,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1379692169}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.365, y: 0.7949, z: 0.5}
+  m_LocalPosition: {x: 8.365, y: 0.7949, z: 0.5}
   m_LocalScale: {x: 1.210066, y: 4.237432, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -499,7 +515,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1547500273}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.9399996, y: 0.61, z: 0.5}
+  m_LocalPosition: {x: 6.9399996, y: 0.61, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -572,7 +588,7 @@ GameObject:
   - component: {fileID: 1895881962}
   m_Layer: 0
   m_Name: EndGround
-  m_TagString: Untagged
+  m_TagString: ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -585,8 +601,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895881960}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.54, y: -3.9273, z: 0.5}
-  m_LocalScale: {x: 2.86, y: 8.194704, z: 1}
+  m_LocalPosition: {x: 7.54, y: -6.5436, z: 0.5}
+  m_LocalScale: {x: 2.86, y: 13.427022, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7348806112069926825}
@@ -694,7 +710,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5783945618504659671}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -6.75, y: 0.75, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -878,20 +894,25 @@ MonoBehaviour:
   totalFitness: 0
   networkRunning: 0
   fitnessSources: []
+  timeElapsed: 0
   cubePiece: {fileID: 700066075}
   car: {fileID: 66338095}
   ghostCar: {fileID: 3892250609668613513}
   endFlag: {fileID: 1547500274}
+  startPoint: {fileID: 382416504616960504}
   useCube: 0
-  useCar: 0
-  rewardCarDistance: 0
-  useBestDistance: 0
-  rewardSturdiness: 1
-  brokenPiecePenalty: 1
+  useCar: 1
+  rewardCarDistance: 1
+  useBestDistance: 1
+  rewardSturdiness: 0
+  stressAmountPenalty: 0
+  brokenPiecePenalty: 0
   disconnectedPointPenalty: 1
-  rewardTimeAlive: 1
-  dontAllowBuildingInCarArea: 1
+  rewardTimeAlive: 0
+  dontAllowBuildingInCarArea: 0
   lowerCostBonus: 0
+  lowYPointsPenalty: 0
+  highYPointsPenalty: 0
   useRelativeCoordinates: 0
 --- !u!114 &7348806112069926827
 MonoBehaviour:
@@ -964,7 +985,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1070,7 +1091,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4
+      value: -6
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1118,6 +1139,17 @@ PrefabInstance:
       objectReference: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
+--- !u!114 &382416504616960504 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6787540987768169692, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
+  m_PrefabInstance: {fileID: 6592334556280628516}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 002cd8a45a6e74a4d961e2aac32a9162, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &382416504616960505 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
@@ -1176,7 +1208,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6787540987768169693, guid: 8353b9d9410ea5344be3fcf5f6646b62, type: 3}
       propertyPath: m_LocalPosition.y

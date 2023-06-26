@@ -305,6 +305,8 @@ MonoBehaviour:
   boxCollider: {fileID: 0}
   startJoint: {fileID: -3526525250782325927}
   endJoint: {fileID: -5358386243945108751}
+  startPos: {x: 0, y: 0}
+  endPos: {x: 0, y: 0}
   currentLoad: 0
   stressColor: {r: 0.8113208, g: 0.15994065, b: 0, a: 1}
   isBroken: 0
@@ -322,7 +324,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 0.3
+  m_Mass: 0.09
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
@@ -342,7 +344,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: 300
+  m_BreakForce: 450
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
@@ -366,7 +368,7 @@ HingeJoint2D:
   serializedVersion: 4
   m_EnableCollision: 0
   m_ConnectedRigidBody: {fileID: 0}
-  m_BreakForce: 300
+  m_BreakForce: 450
   m_BreakTorque: Infinity
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
