@@ -931,9 +931,11 @@ MonoBehaviour:
   timeManager: {fileID: 1208059144}
   optimizeAndShrinkNet: 0
   onlyShowBest: 0
+  keepBestActive: 1
   populationLeft: 0
   bestGenome: 
   bestHash: 
+  checkHash: 
   currentGeneration: 1
   lastBest: 100000000
   bestEverError: 100000000

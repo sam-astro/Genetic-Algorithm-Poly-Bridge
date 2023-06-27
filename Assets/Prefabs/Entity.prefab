@@ -114,7 +114,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 3
+  m_Mass: 5
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
@@ -893,6 +893,7 @@ MonoBehaviour:
   netID: 0
   totalFitness: 0
   networkRunning: 0
+  hash: 
   fitnessSources: []
   timeElapsed: 0
   cubePiece: {fileID: 700066075}
@@ -905,12 +906,12 @@ MonoBehaviour:
   rewardCarDistance: 1
   useBestDistance: 1
   rewardSturdiness: 0
-  stressAmountPenalty: 0
+  stressAveragePenalty: 0
   brokenPiecePenalty: 0
   disconnectedPointPenalty: 1
-  rewardTimeAlive: 0
-  dontAllowBuildingInCarArea: 0
-  lowerCostBonus: 0
+  rewardTimeAlive: 1
+  dontAllowBuildingInCarArea: 1
+  lowerCostBonus: 1
   lowYPointsPenalty: 0
   highYPointsPenalty: 0
   useRelativeCoordinates: 0

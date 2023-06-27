@@ -71,6 +71,7 @@ public class NetManager : MonoBehaviour
 
     public bool optimizeAndShrinkNet = false;
     public bool onlyShowBest = false;
+    public bool keepBestActive = false;
 
     //double promptMin = 0;
     //double promptMax = 0;
@@ -92,6 +93,7 @@ public class NetManager : MonoBehaviour
     NeuralNetwork persistenceNetwork;
     [ShowOnly] public string bestGenome = "";
     [ShowOnly] public string bestHash = "";
+    [ShowOnly] public string checkHash = "";
     private List<NeuralNetwork> topGenomes;
 
     [ShowOnly] public int currentGeneration = 1;
@@ -116,6 +118,8 @@ public class NetManager : MonoBehaviour
 
     public Vector2[] startValues;
     public double[] start2Values;
+
+    SaveData saveData;
 
     //[ShowOnly] public double[] bestMutVarsBefore;
     //[ShowOnly] public double[] bestMutVars;
@@ -146,8 +150,8 @@ public class NetManager : MonoBehaviour
             using (StreamWriter sw = File.AppendText("./Assets/dat/hist.csv"))
                 sw.WriteLine("generation, Top Error, Gen Error, Dropped %");
 
-        DebugGUI.SetGraphProperties("Best Error Over Time", "Best Error", -0.1f, 3, 1, new Color(0, 1, 0), true, 5, Screen.height / 6);
-        DebugGUI.SetGraphProperties("Gen Error", "Gen Error", -0.1f, 3, 1, new Color(0, 0, 1), false, 5, Screen.height / 6);
+        DebugGUI.SetGraphProperties("Best Error Over Time", "Best Error", -0.1f, 3, 1, new Color(0, 1, 0), true, 5, Screen.height / 20);
+        DebugGUI.SetGraphProperties("Gen Error", "Gen Error", -0.1f, 3, 1, new Color(0, 0.6f, 0.9f), true, 5, Screen.height / 20);
 
         // Add existing data to graph
         var lines = File.ReadAllLines("./Assets/dat/hist.csv");
@@ -299,7 +303,14 @@ public class NetManager : MonoBehaviour
 
                 nets.Sort();
 
-                bestError = nets[nets.Count - 1].fitness;
+
+                NeuralNetwork bestNet;
+                if (keepBestActive)
+                    bestNet = nets[nets.Count - 2];
+                else
+                    bestNet = nets[nets.Count - 1];
+
+                bestError = bestNet.fitness;
                 worstError = nets[0].fitness;
 
                 //optimizeAndShrinkNet = optimizeAndShrinkToggle.isOn;
@@ -313,25 +324,27 @@ public class NetManager : MonoBehaviour
                     // If the optimizeAndShrinkNet option is true, and the used
                     // neuron amount is less than the previous best, but the error
                     // is still within 3% or lower of the best ever to not have too much of a deviation
-                    (optimizeAndShrinkNet && (nets[nets.Count - 1].CountDroppedNeurons() >= bestDroppedNeuronsAmnt) && (bestError <= bestEverError * 1.005f)))
+                    (optimizeAndShrinkNet && (bestNet.CountDroppedNeurons() >= bestDroppedNeuronsAmnt) && (bestError <= bestEverError * 1.005f)))
                 {
                     hiScore = true;
 
-                    //if (optimizeAndShrinkNet && (nets[nets.Count - 1].CountDroppedNeurons() < bestDroppedNeuronsAmnt))
+                    //if (optimizeAndShrinkNet && (bestNet.CountDroppedNeurons() < bestDroppedNeuronsAmnt))
                     //    goto skip0;
-                    persistenceNetwork.weights = nets[nets.Count - 1].weights;
-                    persistenceNetwork.mutatableVariables = nets[nets.Count - 1].mutatableVariables;
-                    persistenceNetwork.droppedNeurons = nets[nets.Count - 1].droppedNeurons;
-                    persistenceNetwork.genome = nets[nets.Count - 1].genome;
+                    persistenceNetwork.weights = bestNet.weights;
+                    persistenceNetwork.mutatableVariables = bestNet.mutatableVariables;
+                    persistenceNetwork.droppedNeurons = bestNet.droppedNeurons;
+                    persistenceNetwork.genome = bestNet.genome;
                     if (bestError < bestEverError)
                         bestEverError = bestError;
-                    bestDroppedNeuronsAmnt = nets[nets.Count - 1].CountDroppedNeurons();
+                    bestDroppedNeuronsAmnt = bestNet.CountDroppedNeurons();
 
 
                     // Save data
 
 
                     bestGenome = persistenceNetwork.genome.Substring(0, 8) + "a";
+
+                    //checkHash = ByteArrayToString(new MD5CryptoServiceProvider().ComputeHash(System.IO.File.ReadAllBytes("./Assets/dat/NetworkSaveData.bin")));
 
                     StreamWriter persistence = new StreamWriter("./Assets/dat/WeightSaveMeta.mta");
                     persistence.WriteLine((currentGeneration).ToString() + "#" +
@@ -340,14 +353,14 @@ public class NetManager : MonoBehaviour
                         bestGenome);
 
                     // Save all data into file
-                    SaveData sd = new SaveData();
-                    sd.droppedNeurons = persistenceNetwork.droppedNeurons;
-                    sd.weights = persistenceNetwork.weights;
-                    sd.layers = persistenceNetwork.layers;
-                    sd.mutVars = persistenceNetwork.mutatableVariables;
+                    saveData = new SaveData();
+                    saveData.droppedNeurons = persistenceNetwork.droppedNeurons;
+                    saveData.weights = persistenceNetwork.weights;
+                    saveData.layers = persistenceNetwork.layers;
+                    saveData.mutVars = persistenceNetwork.mutatableVariables;
                     BinaryFormatter bf3 = new BinaryFormatter();
                     using (FileStream fs3 = new FileStream("./Assets/dat/NetworkSaveData.bin", FileMode.Create))
-                        bf3.Serialize(fs3, sd);
+                        bf3.Serialize(fs3, saveData);
 
                     persistence.Close();
 
@@ -372,7 +385,15 @@ public class NetManager : MonoBehaviour
                 //        lastGenome = nets[i].genome.Substring(0, 8);
                 //    }
                 //}
-                //ListBestGenomes();
+                ////ListBestGenomes();
+
+                // If we dont call this to re-load the persistenceNetwork weights, they will be
+                // written over by *something*. Perplexing, isn't it?
+                GatherPersistence();
+
+
+                persistenceNetwork.weightsHash = ByteArrayToString(new MD5CryptoServiceProvider().ComputeHash(persistenceNetwork.CalculateHash()));
+                bestHash = persistenceNetwork.weightsHash;
 
                 Finalizer();
 
@@ -390,9 +411,9 @@ public class NetManager : MonoBehaviour
                 //droppedNeuronsText.text = "Dropped Neurons: " + bestDroppedNeuronsAmnt.ToString() + ", " + Math.Round((float)bestDroppedNeuronsAmnt / (float)totalNeurons * 100f, 1).ToString() + "%";
 
 
-                // Only iterate the bridge entities a single time; this is when they
-                // create their bridges, then we just wait for physics.
-                IterateNetEntities();
+                //// Only iterate the bridge entities a single time; this is when they
+                //// create their bridges, then we just wait for physics.
+                //IterateNetEntities();
                 Time.timeScale = 1;
 
                 DebugGUI.Graph("Best Error Over Time", (float)bestEverError);
@@ -470,7 +491,10 @@ public class NetManager : MonoBehaviour
             //entityList[i].GetComponent<Entity>().Elapse();
             amnt -= entityList[i].GetComponent<Entity>().Elapse() ? 0 : 1;
         populationLeft = amnt;
-        return amnt != 0;
+        if (keepBestActive)
+            return amnt > 1;
+        else
+            return amnt > 0;
     }
 
     NeuralNetwork SplitGenomes(NeuralNetwork parentA, NeuralNetwork parentB)
@@ -487,7 +511,7 @@ public class NetManager : MonoBehaviour
             {
                 for (int z = 0; z < parentA.weights[x][y].Length; z++, secLength--)
                 {
-                    bool isMutation = UnityEngine.Random.Range(0, 40) == 1;
+                    bool isMutation = UnityEngine.Random.Range(0, 20) == 1;
 
                     if (isMutation)
                     {
@@ -495,8 +519,8 @@ public class NetManager : MonoBehaviour
                         // which copies it from a different location, or one
                         // where the number is nullified, turned to 0
                         int mutationType = UnityEngine.Random.Range(0, 80);
-                        // If random mutator, or this is the last digit, or on odd index
-                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1)
+                        // If random mutator, or this is the last digit, or an odd index
+                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1 || (z % 2 != 0&& y==0))
                             outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
                         else if (mutationType <= 80 && y == 0)
                         {
@@ -564,7 +588,7 @@ public class NetManager : MonoBehaviour
                     {
                         if (secLength <= 0)
                         {
-                            secLength = UnityEngine.Random.Range(outNet.weights[x][y].Length / 3, outNet.weights[x][y].Length + 3);
+                            secLength = UnityEngine.Random.Range(outNet.weights[x][y].Length / 5, outNet.weights[x][y].Length);
                             if (secLength % 2 != 0 && y == 0) // Make sure section length is even if first array, to not split coordinate pair
                                 secLength++;
                             copyFromSide = UnityEngine.Random.Range(0, 2) == 1;
@@ -603,7 +627,7 @@ public class NetManager : MonoBehaviour
         // Create new offspring to fill the population
         for (int i = 0; i < populationSize/* - populationSize / 10*/; i++) // 1/10th will be randomized
         {
-            int numOfCandidates = UnityEngine.Random.Range(1, 4);
+            int numOfCandidates = UnityEngine.Random.Range(3, 7);
 
             int bestNet = 0;
             double bestScore = 100000d;
@@ -627,7 +651,7 @@ public class NetManager : MonoBehaviour
             parentA = bestNet;
 
 
-            numOfCandidates = UnityEngine.Random.Range(1, 4);
+            numOfCandidates = UnityEngine.Random.Range(3, 7);
 
             bestNet = 0;
             bestScore = 100000d;
@@ -683,11 +707,21 @@ public class NetManager : MonoBehaviour
             nets[i].pendingFitness = 0;
             //nets[i].ResetGenome();
         }
-        nets[0] = new NeuralNetwork(persistenceNetwork);
-        nets[0].droppedNeurons = persistenceNetwork.droppedNeurons;
-        nets[0].mutatableVariables = persistenceNetwork.mutatableVariables;
-        nets[0].genome = persistenceNetwork.genome;
-        nets[0].isBest = true;
+
+        if (keepBestActive)
+        {
+            nets[0] = new NeuralNetwork(persistenceNetwork);
+            //nets[0].CopyWeights(saveData.weights);
+            nets[0].weights = saveData.weights;
+            nets[0].droppedNeurons = persistenceNetwork.droppedNeurons;
+            nets[0].mutatableVariables = persistenceNetwork.mutatableVariables;
+            nets[0].genome = persistenceNetwork.genome;
+            nets[0].isBest = true;
+            //BinaryFormatter bf = new BinaryFormatter();
+            //using (FileStream fs = new FileStream("./Assets/dat/temp_weights.bin", FileMode.Create))
+            //    bf.Serialize(fs, nets[0].weights);
+            nets[0].weightsHash = ByteArrayToString(new MD5CryptoServiceProvider().ComputeHash(nets[0].CalculateHash()));
+        }
     }
 
     void Finalizer()
@@ -917,11 +951,11 @@ public class NetManager : MonoBehaviour
                 net.droppedNeurons = net.RandomizeDroppedNeurons(dropChance);
 
                 for (int x = 0; x < net.weights.Length; x++)
-                    for (int z = 0; z < net.weights[x][0].Length && z < startValues.Length*2; z++)
+                    for (int z = 0; z < net.weights[x][0].Length && z < startValues.Length * 2; z++)
                         if (z % 2 == 0)
-                            net.weights[x][0][z] = startValues[z/2].x/ outputMultiplier;
+                            net.weights[x][0][z] = startValues[z / 2].x / outputMultiplier;
                         else
-                            net.weights[x][0][z] = startValues[z/2].y/ outputMultiplier;
+                            net.weights[x][0][z] = startValues[z / 2].y / outputMultiplier;
 
                 for (int x = 0; x < net.weights.Length; x++)
                     for (int z = 0; z < net.weights[x][1].Length && z < start2Values.Length; z++)
@@ -1035,13 +1069,13 @@ public class NetManager : MonoBehaviour
             // NEW LOADING SYSTEM
 
             // Load save data into persistence network
-            SaveData sd = new SaveData();
+            saveData = new SaveData();
             BinaryFormatter bf3 = new BinaryFormatter();
             using (FileStream fs3 = new FileStream("./Assets/dat/NetworkSaveData.bin", FileMode.Open))
-                sd = (SaveData)bf3.Deserialize(fs3);
-            persistenceNetwork.weights = sd.weights;
-            persistenceNetwork.mutatableVariables = sd.mutVars;
-            persistenceNetwork.droppedNeurons = sd.droppedNeurons;
+                saveData = (SaveData)bf3.Deserialize(fs3);
+            persistenceNetwork.weights = saveData.weights;
+            persistenceNetwork.mutatableVariables = saveData.mutVars;
+            persistenceNetwork.droppedNeurons = saveData.droppedNeurons;
             bestDroppedNeuronsAmnt = persistenceNetwork.CountDroppedNeurons();
 
 

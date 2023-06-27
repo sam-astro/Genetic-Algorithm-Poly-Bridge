@@ -820,7 +820,7 @@ public class DebugGUI : MonoBehaviour
         {
             if (autoScale)
             {
-                SetMinMax(Mathf.Min(val-val/2f, min), Mathf.Max(val+val/2f, max));
+                SetMinMax(Mathf.Min(val-Mathf.Abs(val/2f), min), Mathf.Max(val+ Mathf.Abs(val /2f), max));
             }
 
             currentIndex = (currentIndex + 1) % values.Length;

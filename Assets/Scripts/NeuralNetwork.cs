@@ -469,24 +469,29 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                     double weight = weights[i][j][k];
 
                     //mutate weight value 
-                    double randomNumber = UnityEngine.Random.Range(0, 60);
+                    double randomNumber = UnityEngine.Random.Range(0, 120);
 
-                    if (randomNumber <= 2f)
-                    { //if 3
-                      //randomly increase by 0% to 1%
-                        double factor = UnityEngine.Random.Range(0, 100) / 10000.0f;
+                    if (randomNumber <= 10f)
+                    { //if 2
+                      //randomly increase by 0 to 0.5
+                        double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
                         weight += factor;
                     }
-                    else if (randomNumber <= 4f)
+                    else if (randomNumber <= 20f)
                     { //if 4
-                      //randomly decrease by 0% to 1%
-                        double factor = UnityEngine.Random.Range(-100, 100) / 10000.0f;
+                      //randomly decrease by 0 to 0.5
+                        double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
                         weight -= factor;
                     }
-                    else if (randomNumber <= 8f)
-                    { //if 5
-                      //randomly increase or decrease weight by tiny amount
-                        double factor = UnityEngine.Random.Range(-1000, 1000) / 100.0f / 1000f;
+                    else if (randomNumber <= 22f)
+                    { //if 6
+                      //invert
+                        weight *= -1f;
+                    }
+                    else if (randomNumber <= 28f)
+                    { //if 8
+                      //randomly increase or decrease weight by 1
+                        double factor = UnityEngine.Random.Range(-1000, 1000) / 1000.0f;
                         weight += factor;
                     }
                     //else
@@ -564,7 +569,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Count total neurons
         int total = 0;
         for (int i = 1; i < neurons.Length; i++)
-            total+= neurons[i].Length - 1;
+            total += neurons[i].Length - 1;
         return total;
     }
 
@@ -638,11 +643,29 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         return mutArTemp;
     }
 
+    public byte[] CalculateHash()
+    {
+        List<byte> hashData = new List<byte>();
+
+        for (int i = 0; i < weights.Length; i++)
+        {
+            for (int j = 0; j < weights[i].Length; j++)
+            {
+                for (int k = 0; k < weights[i][j].Length; k++)
+                {
+                    hashData.Add((byte)(((weights[i][j][k]/6f)+1f)*128));
+                }
+            }
+        }
+
+        return hashData.ToArray();
+    }
+
 
     public double FixedSingleMutateMutVars(double inm)
     {
         double mut = inm;
-    
+
         //mutate weight value 
         double randomNumber = UnityEngine.Random.Range(0, 100);
 

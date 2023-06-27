@@ -18,6 +18,7 @@ public class Entity : MonoBehaviour
     [ShowOnly] public int netID;
     [ShowOnly] public double totalFitness;
     [ShowOnly] public bool networkRunning = false;
+    [ShowOnly] public string hash;
 
     double[] locations;
     double[] types;
@@ -31,6 +32,7 @@ public class Entity : MonoBehaviour
 
     float bestCarDistance = 100000f;
     float initialCarDistance = 1f;
+    float totalStress = 0f;
 
     int numPointsConnected = 0;
 
@@ -43,13 +45,13 @@ public class Entity : MonoBehaviour
 
     Rigidbody2D carRb;
 
-    [Header("Fitness Config")]
+    [Header("Fitness Modifiers")]
     public bool useCube = false;
     public bool useCar = false;
     public bool rewardCarDistance = false;
     public bool useBestDistance = false;
     public bool rewardSturdiness = false;
-    public bool stressAmountPenalty = false;
+    public bool stressAveragePenalty = false;
     public bool brokenPiecePenalty = false;
     public bool disconnectedPointPenalty = false;
     public bool rewardTimeAlive = false;
@@ -142,12 +144,14 @@ public class Entity : MonoBehaviour
             {
                 if (b.isBroken)
                     networkRunning = false;
+                if (stressAveragePenalty)
+                    totalStress += b.currentLoad;
             }
-            //foreach (Point p in allPoints.Values)
-            //{
-            //    if (p.transform.localPosition.y < -2.5f && p.pointID != (Vector2)Vector2Int.RoundToInt(p.transform.localPosition))
-            //        networkRunning = false;
-            //}
+            foreach (Point p in allPoints.Values)
+            {
+                if (p.transform.localPosition.y < -3f && p.pointID != (Vector2)Vector2Int.RoundToInt(p.transform.localPosition))
+                    networkRunning = false;
+            }
 
             // If failing, or this is the last possible iteration, end.
             if (car.position.y <= -2f || timeElapsed >= totalIterations - simulationWaitIterations - 1 || networkRunning == false || bestCarDistance <= 0.05f)
@@ -180,6 +184,12 @@ public class Entity : MonoBehaviour
         if (car.position.y <= -2)
             net.pendingFitness += 0.5f;
 
+        if (stressAveragePenalty)
+        {
+            net.pendingFitness += this.totalStress/(float)timeElapsed/(float)allBars.Count;
+            fitnessSources.Add(this.totalStress / (float)timeElapsed / (float)allBars.Count);
+        }
+
         if (rewardCarDistance)
         {
             //net.pendingFitness += 1f - (Mathf.Clamp(car.transform.position.x, -5f, 5f) + 5f) / 10f;
@@ -188,9 +198,9 @@ public class Entity : MonoBehaviour
 
             if (bestCarDistance <= 0.05f)
             {
-                net.pendingFitness -= 1;
+                net.pendingFitness -= 1- ((float)(totalIterations - timeElapsed) / (float)totalIterations);
                 timeElapsed = totalIterations;
-                fitnessSources.Add(-1);
+                fitnessSources.Add(-1- ((float)(totalIterations - timeElapsed) / (float)totalIterations));
             }
             else
                 fitnessSources.Add(bestCarDistance);
@@ -221,19 +231,19 @@ public class Entity : MonoBehaviour
         }
 
 
-        // Also give a penalty for any high stresses (not including broken)
-        float totalStress = 0f;
-        foreach (Bar b in allBars.Values)
-        {
-            if (b.isBroken == false)
-                totalStress += b.currentLoad;
-        }
-        totalStress /= (float)(allBars.Count); // Average
-        if (stressAmountPenalty)
-        {
-            net.pendingFitness += totalStress;
-            fitnessSources.Add(totalStress);
-        }
+        //// Also give a penalty for any high stresses (not including broken)
+        //float totalStress = 0f;
+        //foreach (Bar b in allBars.Values)
+        //{
+        //    if (b.isBroken == false)
+        //        totalStress += b.currentLoad;
+        //}
+        //totalStress /= (float)(allBars.Count); // Average
+        //if (stressAmountPenalty)
+        //{
+        //    net.pendingFitness += totalStress;
+        //    fitnessSources.Add(totalStress);
+        //}
 
         // Also give a penalty for any broken bridge pieces
         float totalBroken = 0f;
@@ -266,6 +276,7 @@ public class Entity : MonoBehaviour
         this.netID = net.netID;
         this.simulationWaitIterations = simulationWaitIterations;
         carColliding = car.GetComponent<IsColliding>();
+        hash = this.net.weightsHash;
         //this.netUI = netUI;
         //net.error = 0;
         timeElapsed = 0;
