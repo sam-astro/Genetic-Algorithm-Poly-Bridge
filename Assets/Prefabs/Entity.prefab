@@ -20,7 +20,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &66338095
 Transform:
   m_ObjectHideFlags: 0
@@ -913,7 +913,7 @@ MonoBehaviour:
   dontAllowBuildingInCarArea: 1
   lowerCostBonus: 1
   lowYPointsPenalty: 0
-  highYPointsPenalty: 0
+  highYPointsPenalty: 1
   useRelativeCoordinates: 0
 --- !u!114 &7348806112069926827
 MonoBehaviour:

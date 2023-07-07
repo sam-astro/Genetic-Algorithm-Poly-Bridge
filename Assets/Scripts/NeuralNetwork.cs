@@ -74,7 +74,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
         //generate matrix
         InitNeurons();
-        InitWeights(persistenceWeights);
+        InitWeights(persistenceWeights, true);
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         this.learningRate = copyNetwork.learningRate;
         this.mutVarSize = copyNetwork.mutVarSize;
         InitNeurons();
-        InitWeights(copyNetwork.weights);
+        InitWeights(copyNetwork.weights, true);
         CopyDroppped(copyNetwork.droppedNeurons);
 
         //mutVarSize = copyNetwork.mutVarSize;
@@ -222,7 +222,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// <summary>
     /// Create weights matrix.
     /// </summary>
-    private void InitWeights(double[][][] persistenceWeights)
+    private void InitWeights(double[][][] persistenceWeights, bool keepZero)
     {
         //StreamReader streamReader = File.OpenText("./Assets/dat/WeightSave.dat");
         //string[] lines = streamReader.ReadToEnd().Split('\n');
@@ -245,8 +245,11 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 //itterate over all neurons in the previous layer and set the weights randomly between 0.5f and -0.5
                 for (int k = 0; k < neuronsInPreviousLayer; k++)
                 {
-                    //give random weights to neuron weights
-                    neuronWeights[k] = UnityEngine.Random.Range(-0.5f, 0.5f);
+                    if (keepZero)
+                        neuronWeights[k] = 0d;
+                    else
+                        //give random weights to neuron weights
+                        neuronWeights[k] = UnityEngine.Random.Range(-0.5f, 0.5f);
                     //neuronWeights[k] = new Random().Next(-50, 50) / 100.0d;
                 }
                 //neuronWeights[neuronWeights.Length - 1] = 1; // Set bias to 1
@@ -512,7 +515,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// <summary>
     /// Mutate single neural network weight
     /// </summary>
-    public double FixedSingleMutate(double inw)
+    public double FixedSingleMutate(double inw, bool option)
     {
         double weight = inw;
 
@@ -531,7 +534,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             double factor = UnityEngine.Random.Range(0, 500) / 1000.0f;
             weight -= factor;
         }
-        else if (randomNumber <= 5f)
+        else if (randomNumber <= 5f && option)
         { //if 6
           //invert
             weight *= -1f;
@@ -539,7 +542,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         else if (randomNumber <= 7f)
         { //if 8
           //randomly increase or decrease weight by 1
-            double factor = UnityEngine.Random.Range(-1000, 1000) / 1000.0f;
+            double factor = UnityEngine.Random.Range(-1000, 1001) / 1000.0f;
             weight += factor;
         }
         //else
@@ -653,7 +656,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             {
                 for (int k = 0; k < weights[i][j].Length; k++)
                 {
-                    hashData.Add((byte)(((weights[i][j][k]/6f)+1f)*128));
+                    hashData.Add((byte)(((weights[i][j][k] / 6f) + 1f) * 128));
                 }
             }
         }

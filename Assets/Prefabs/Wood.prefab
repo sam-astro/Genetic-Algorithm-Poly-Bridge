@@ -312,6 +312,7 @@ MonoBehaviour:
   isBroken: 0
   length: 0
   costPerUnit: 180
+  weightPerUnit: 0.05
 --- !u!50 &-2817594321734108805
 Rigidbody2D:
   serializedVersion: 4

@@ -122,7 +122,6 @@ public class Entity : MonoBehaviour
             {
                 if (carColliding.isColliding)
                     carRb.velocity = new Vector2(Mathf.Lerp(carRb.velocity.x, 3f * (float)simulationWaitIterations, Time.deltaTime), carRb.velocity.y);
-                ghostCar.position = car.position;
             }
 
             if (rewardCarDistance)
@@ -132,10 +131,16 @@ public class Entity : MonoBehaviour
                 if (useBestDistance)
                 {
                     if (dist < bestCarDistance)
+                    {
+                        ghostCar.position = car.position;
                         bestCarDistance = dist;
+                    }
                 }
                 else
+                {
+                    ghostCar.position = car.position;
                     bestCarDistance = dist;
+                }
             }
 
             //net.pendingFitness += -cubePiece.position.y/3f;
@@ -179,8 +184,10 @@ public class Entity : MonoBehaviour
             return false;
     }
 
-    void End()
+    public void End()
     {
+        networkRunning = false;
+
         if (car.position.y <= -2)
             net.pendingFitness += 0.5f;
 
@@ -196,20 +203,20 @@ public class Entity : MonoBehaviour
             //fitnessSources.Add(1f - (Mathf.Clamp(car.transform.position.x, -5f, 5f) + 5f) / 10f);
             net.pendingFitness += bestCarDistance*3f;
 
-            if (bestCarDistance <= 0.05f)
-            {
-                net.pendingFitness -= 1- ((float)(totalIterations - timeElapsed) / (float)totalIterations);
-                timeElapsed = totalIterations;
-                fitnessSources.Add(-1- ((float)(totalIterations - timeElapsed) / (float)totalIterations));
-            }
-            else
-                fitnessSources.Add(bestCarDistance);
+            //if (bestCarDistance <= 0.05f)
+            //{
+            //    net.pendingFitness -= 1- ((float)(totalIterations - timeElapsed) / (float)totalIterations);
+            //    timeElapsed = totalIterations;
+            //    fitnessSources.Add(-1- ((float)(totalIterations - timeElapsed) / (float)totalIterations));
+            //}
+            //else
+            fitnessSources.Add(bestCarDistance*3f);
         }
 
         if (rewardTimeAlive)
         {
-            net.pendingFitness += (1f - (float)timeElapsed / (float)totalIterations) * 3f;
-            fitnessSources.Add((1f - (float)timeElapsed / (float)totalIterations) * 3f);
+            net.pendingFitness += (1f - (float)timeElapsed / (float)totalIterations) * 6f;
+            fitnessSources.Add((1f - (float)timeElapsed / (float)totalIterations) * 6f);
         }
 
         // Compare the beginning and ending positions of all
@@ -396,6 +403,17 @@ public class Entity : MonoBehaviour
                 numPointsConnected += 1;
         }
 
+
+        // Count the number of points that only have one bridge pieces connected
+        float onePoint = 0;
+        foreach (Point pt in allPoints.Values)
+            if (pt.connectedBars.Count == 1)
+                onePoint++;
+
+        net.pendingFitness += onePoint/(float)allPoints.Count;
+        fitnessSources.Add(onePoint / (float)allPoints.Count);
+
+
         // Find the distance from the disconnected points to their nearest point, and punish less the closer it is.
         float totalDists = 0f;
         foreach (Vector2 dsPt in disconnectedPoints)
@@ -419,8 +437,8 @@ public class Entity : MonoBehaviour
         }
         else if (disconnectedPointPenalty)
         {
-            net.pendingFitness += -0.1f;
-            fitnessSources.Add(-0.1f);
+            net.pendingFitness += -0.1d;
+            fitnessSources.Add(-0.1d);
         }
 
         // Add extra for the cost of the bridge pieces

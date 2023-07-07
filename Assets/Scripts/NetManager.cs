@@ -52,7 +52,6 @@ public class NetManager : MonoBehaviour
     public TMP_Text fitnessText;
     public Animator increasedFitnessIcon;
     public Slider genProgress;
-    public DebugGUI debugGUI;
     //public TMP_Text droppedNeuronsText;
     //public TMP_Text genomeList;
     //public Slider dropChanceSlider;
@@ -158,7 +157,7 @@ public class NetManager : MonoBehaviour
         for (var i = 1; i < lines.Length; i += 1)
         {
             DebugGUI.Graph("Best Error Over Time", float.Parse(lines[i].Split(",")[1]));
-            DebugGUI.Graph("Gen Error", float.Parse(lines[i].Split(",")[2]));
+            DebugGUI.Graph("Gen Error", float.Parse(lines[i].Split(",")[1]));
         }
 
 
@@ -296,6 +295,14 @@ public class NetManager : MonoBehaviour
                 // Make sure final pendingFitness is added
                 for (int i = 0; i < populationSize; i++)
                 {
+                    if (entityList[i].GetComponent<Entity>().networkRunning)
+                        entityList[i].GetComponent<Entity>().End();
+                    if (entityList[i].GetComponent<Entity>().net.isBest)
+                    {
+                        entityList[i].GetComponent<Entity>().net.fitness = bestEverError* maxTrialsPerGeneration;
+                        entityList[i].GetComponent<Entity>().net.pendingFitness = 0;
+                    }
+
                     nets[i].fitness += nets[i].pendingFitness;
                     nets[i].fitness /= maxTrialsPerGeneration;
                     nets[i].dropChance = dropChance; // (Also apply drop chance here before the finalizer)
@@ -305,7 +312,7 @@ public class NetManager : MonoBehaviour
 
 
                 NeuralNetwork bestNet;
-                if (keepBestActive)
+                if (nets[nets.Count - 1].isBest)
                     bestNet = nets[nets.Count - 2];
                 else
                     bestNet = nets[nets.Count - 1];
@@ -417,7 +424,7 @@ public class NetManager : MonoBehaviour
                 Time.timeScale = 1;
 
                 DebugGUI.Graph("Best Error Over Time", (float)bestEverError);
-                DebugGUI.Graph("Gen Error", (float)lastBest);
+                DebugGUI.Graph("Gen Error", (float)bestEverError);
             }
             else // Otherwise, create next currentTrial and reset entities
             {
@@ -499,9 +506,9 @@ public class NetManager : MonoBehaviour
 
     NeuralNetwork SplitGenomes(NeuralNetwork parentA, NeuralNetwork parentB)
     {
-        NeuralNetwork outNet = new NeuralNetwork(persistenceNetwork);
+        NeuralNetwork outNet = new NeuralNetwork(layers, null);
         //double[][][] outWeights = persistenceNetwork.weights;
-        int secLength = UnityEngine.Random.Range(outNet.weights[0][0].Length / 3, outNet.weights[0][0].Length + 3);
+        int secLength = UnityEngine.Random.Range(outNet.weights[0][0].Length/4, outNet.weights[0][0].Length + 3);
         if (secLength % 2 != 0) // Make sure section length is even, to not split coordinate pair
             secLength++;
         bool copyFromSide = false; // False => parentA    True => parentB
@@ -511,7 +518,10 @@ public class NetManager : MonoBehaviour
             {
                 for (int z = 0; z < parentA.weights[x][y].Length; z++, secLength--)
                 {
-                    bool isMutation = UnityEngine.Random.Range(0, 20) == 1;
+                    if (outNet.weights[x][y][z] != 0d) // If the weight has already been set from another operation (not zero) continue
+                        continue;
+
+                    bool isMutation = UnityEngine.Random.Range(0, 60) == 1;
 
                     if (isMutation)
                     {
@@ -520,8 +530,8 @@ public class NetManager : MonoBehaviour
                         // where the number is nullified, turned to 0
                         int mutationType = UnityEngine.Random.Range(0, 80);
                         // If random mutator, or this is the last digit, or an odd index
-                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1 || (z % 2 != 0&& y==0))
-                            outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z]);
+                        if (mutationType <= 40 || z >= parentA.weights[x][y].Length - 1 || (z % 2 != 0 && y == 0))
+                            outNet.weights[x][y][z] = outNet.FixedSingleMutate(outNet.weights[x][y][z], (x == 1));
                         else if (mutationType <= 80 && y == 0)
                         {
                             int rnd = UnityEngine.Random.Range(0, outNet.weights[x][y].Length - 2);
@@ -627,7 +637,7 @@ public class NetManager : MonoBehaviour
         // Create new offspring to fill the population
         for (int i = 0; i < populationSize/* - populationSize / 10*/; i++) // 1/10th will be randomized
         {
-            int numOfCandidates = UnityEngine.Random.Range(3, 7);
+            int numOfCandidates = UnityEngine.Random.Range(3, 8);
 
             int bestNet = 0;
             double bestScore = 100000d;
@@ -651,7 +661,7 @@ public class NetManager : MonoBehaviour
             parentA = bestNet;
 
 
-            numOfCandidates = UnityEngine.Random.Range(3, 7);
+            numOfCandidates = UnityEngine.Random.Range(3, 8);
 
             bestNet = 0;
             bestScore = 100000d;
@@ -939,7 +949,7 @@ public class NetManager : MonoBehaviour
         for (int i = 0; i < populationSize; i++)
         {
             // If no weights were loaded, create random network
-            if (bestGenome == "")
+            if (bestGenome == "" || i > 1)
             {
                 NeuralNetwork net = new NeuralNetwork(layers, null);
                 //Debug.Log("* Creating net: " + i + " of " + populationSize);
@@ -950,16 +960,16 @@ public class NetManager : MonoBehaviour
                 net.CopyWeights(net.RandomizeWeights());
                 net.droppedNeurons = net.RandomizeDroppedNeurons(dropChance);
 
-                for (int x = 0; x < net.weights.Length; x++)
-                    for (int z = 0; z < net.weights[x][0].Length && z < startValues.Length * 2; z++)
-                        if (z % 2 == 0)
-                            net.weights[x][0][z] = startValues[z / 2].x / outputMultiplier;
-                        else
-                            net.weights[x][0][z] = startValues[z / 2].y / outputMultiplier;
+                // for (int x = 0; x < net.weights.Length; x++)
+                //     for (int z = 0; z < net.weights[x][0].Length && z < startValues.Length * 2; z++)
+                //         if (z % 2 == 0)
+                //             net.weights[x][0][z] = startValues[z / 2].x / outputMultiplier;
+                //         else
+                //             net.weights[x][0][z] = startValues[z / 2].y / outputMultiplier;
 
-                for (int x = 0; x < net.weights.Length; x++)
-                    for (int z = 0; z < net.weights[x][1].Length && z < start2Values.Length; z++)
-                        net.weights[x][1][z] = start2Values[z];
+                // for (int x = 0; x < net.weights.Length; x++)
+                //     for (int z = 0; z < net.weights[x][1].Length && z < start2Values.Length; z++)
+                //         net.weights[x][1][z] = start2Values[z];
 
                 //net.mutatableVariables = net.RandomizeMutVars();
                 net.mutatableVariables[0] = 0.25f;
@@ -1082,9 +1092,12 @@ public class NetManager : MonoBehaviour
             // Load metadata like best error and generation
             StreamReader sr = File.OpenText("./Assets/dat/WeightSaveMeta.mta");
             string firstLine = sr.ReadLine().Trim();
-            currentGeneration = int.Parse(firstLine.Split('#')[0]) + 1;
-            bestEverError = double.Parse(firstLine.Split('#')[1]);
-            timeManager.offsetTime = int.Parse(firstLine.Split('#')[2]);
+            if (timeManager.offsetTime == 0)
+            {
+                currentGeneration = int.Parse(firstLine.Split('#')[0]) + 1;
+                bestEverError = double.Parse(firstLine.Split('#')[1]);
+                timeManager.offsetTime = int.Parse(firstLine.Split('#')[2]);
+            }
             bestGenome = firstLine.Split('#')[3];
             persistenceNetwork.genome = bestGenome;
             sr.Close();

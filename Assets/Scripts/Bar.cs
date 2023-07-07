@@ -28,6 +28,9 @@ public class Bar : MonoBehaviour
 
     [ShowOnly] public float length = 0f;
     public float costPerUnit = 1f;
+    public float weightPerUnit = 1f;
+
+    Rigidbody2D rb;
 
 
     private void Awake()
@@ -35,6 +38,7 @@ public class Bar : MonoBehaviour
         model = transform.GetChild(0);
         barSpriteRenderer = GetComponent<SpriteRenderer>();
         startColor = barSpriteRenderer.color;
+        rb = GetComponent<Rigidbody2D>();
     }
 
     public void UpdateCreatingBar(Vector3 toPosition)
@@ -56,6 +60,8 @@ public class Bar : MonoBehaviour
         startPos = (Vector2)(Vector2Int.RoundToInt(startPosition));
         endPos = (Vector2)(Vector2Int.RoundToInt(toPosition));
         SortV2s();
+
+        rb.mass = length * weightPerUnit;
     }
 
     void SortV2s()
