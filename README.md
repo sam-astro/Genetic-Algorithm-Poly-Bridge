@@ -1,7 +1,7 @@
 # Genetic-Algorithm-Poly-Bridge
 
 
-Don't blame me if you use this mess of code 😅
+An application for creating polybridge-like bridges using a genetic algorithm for evolution.
 
 ### Funky bridge:
 
